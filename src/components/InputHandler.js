@@ -13,7 +13,7 @@ export class InputHandler {
   init() {
     // 创建变换器
     this.transformer = new Konva.Transformer({
-      rotationSnaps: [0, 45, 135, 225, 315],
+      rotationSnaps: [0, 90, 180, 270],
       rotationSnapTolerance: 45,
       enabledAnchors: [],
       resizeEnabled: false,
@@ -74,6 +74,14 @@ export class InputHandler {
       case 'arrowdown':
         e.preventDefault();
         this.selectedBlock.flip('vertical');
+        break;
+      case 'r':
+        e.preventDefault();
+        this.selectedBlock.rotate(90); // 顺时针旋转90度
+        break;
+      case 'l':
+        e.preventDefault();
+        this.selectedBlock.rotate(-90); // 逆时针旋转90度
         break;
     }
   }

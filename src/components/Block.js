@@ -151,6 +151,27 @@ export class Block {
   }
 
   /**
+   * 旋转积木
+   * @param {number} angle - 旋转角度（正值顺时针，负值逆时针）
+   */
+  rotate(angle) {
+    const currentRotation = this.group.rotation();
+    // 标准化当前角度到 0-360 范围
+    let normalizedRotation = currentRotation % 360;
+    if (normalizedRotation < 0) normalizedRotation += 360;
+
+    // 计算新的旋转角度
+    let newRotation = normalizedRotation + angle;
+
+    // 标准化新角度
+    newRotation = newRotation % 360;
+    if (newRotation < 0) newRotation += 360;
+
+    this.group.rotation(newRotation);
+    this.layer.draw();
+  }
+
+  /**
    * 吸附到网格
    * @returns {boolean}
    */
