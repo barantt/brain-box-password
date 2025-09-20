@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>菱形棋盘游戏 - Tailwind CSS 版本</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/konva@9/konva.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            game: {
+              bg: '#e9e9e9',
+              grid: '#fbbf24',
+              accent: '#ef4444'
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center p-4">
+  <!-- 游戏主容器 -->
+  <div class="max-w-7xl w-full">
+    <!-- 游戏标题 -->
+    <header class="text-center mb-8">
+      <h1 class="text-5xl font-bold text-slate-800 mb-3 tracking-tight">菱形棋盘拼图</h1>
+      <p class="text-lg text-slate-600">将所有 L 形积木填满菱形网格</p>
+    </header>
+
+    <!-- 游戏主体 -->
+    <main class="flex flex-col xl:flex-row gap-8 items-start justify-center">
+      <!-- 游戏画布容器 -->
+      <div class="flex-1 flex justify-center">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 border border-slate-200">
+          <div id="container" class="relative"></div>
+        </div>
+      </div>
+
+      <!-- 侧边栏 -->
+      <aside class="w-full xl:w-96 space-y-6">
+        <!-- 操作说明卡片 -->
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-7">
+          <h2 class="text-2xl font-bold text-slate-800 mb-5 flex items-center">
+            <svg class="w-6 h-6 mr-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            操作指南
+          </h2>
+          <div class="space-y-4">
+            <div class="flex items-start">
+              <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                <span class="text-blue-600 font-semibold text-sm">1</span>
+              </div>
+              <div>
+                <h3 class="font-medium text-slate-800">选择积木</h3>
+                <p class="text-sm text-slate-600 mt-1">点击积木进行选择</p>
+              </div>
+            </div>
+            <div class="flex items-start">
+              <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                <span class="text-blue-600 font-semibold text-sm">2</span>
+              </div>
+              <div>
+                <h3 class="font-medium text-slate-800">旋转积木</h3>
+                <p class="text-sm text-slate-600 mt-1">拖拽旋转控制器</p>
+              </div>
+            </div>
+            <div class="flex items-start">
+              <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                <span class="text-blue-600 font-semibold text-sm">3</span>
+              </div>
+              <div>
+                <h3 class="font-medium text-slate-800">翻转积木</h3>
+                <p class="text-sm text-slate-600 mt-1">
+                  <span class="inline-flex items-center px-2.5 py-1 bg-slate-100 rounded-lg text-sm font-mono font-medium text-slate-700 mr-2">H</span>
+                  <span class="text-slate-500">或</span>
+                  <span class="inline-flex items-center px-2.5 py-1 bg-slate-100 rounded-lg text-sm font-mono font-medium text-slate-700 mx-2">← →</span>
+                  水平翻转
+                </p>
+                <p class="text-sm text-slate-600 mt-1">
+                  <span class="inline-flex items-center px-2.5 py-1 bg-slate-100 rounded-lg text-sm font-mono font-medium text-slate-700 mr-2">V</span>
+                  <span class="text-slate-500">或</span>
+                  <span class="inline-flex items-center px-2.5 py-1 bg-slate-100 rounded-lg text-sm font-mono font-medium text-slate-700 mx-2">↑ ↓</span>
+                  垂直翻转
+                </p>
+              </div>
+            </div>
+            <div class="flex items-start">
+              <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                <span class="text-blue-600 font-semibold text-sm">4</span>
+              </div>
+              <div>
+                <h3 class="font-medium text-slate-800">重置位置</h3>
+                <p class="text-sm text-slate-600 mt-1">双击积木重置到初始位置</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 游戏统计 -->
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-7">
+          <h2 class="text-2xl font-bold text-slate-800 mb-5 flex items-center">
+            <svg class="w-6 h-6 mr-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            游戏进度
+          </h2>
+          <div class="space-y-4">
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-sm font-medium text-slate-700">完成度</span>
+                <span id="progress-text" class="text-sm font-bold text-slate-900">0%</span>
+              </div>
+              <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                <div id="progress-bar" class="bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 h-3 rounded-full transition-all duration-500 ease-out shadow-lg" style="width: 0%"></div>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 pt-2">
+              <div class="bg-slate-50 rounded-lg p-3">
+                <p class="text-xs text-slate-600 mb-1">剩余积木</p>
+                <p id="remaining-blocks" class="text-2xl font-bold text-slate-800">12</p>
+              </div>
+              <div class="bg-slate-50 rounded-lg p-3">
+                <p class="text-xs text-slate-600 mb-1">已放置</p>
+                <p id="placed-blocks" class="text-2xl font-bold text-slate-800">0</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 控制按钮 -->
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-7">
+          <h2 class="text-2xl font-bold text-slate-800 mb-5 flex items-center">
+            <svg class="w-6 h-6 mr-3 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+            </svg>
+            游戏控制
+          </h2>
+          <div class="space-y-3">
+            <button id="reset-btn" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg">
+              <span class="flex items-center justify-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                重新开始
+              </span>
+            </button>
+            <button id="pause-btn" class="w-full bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg">
+              <span class="flex items-center justify-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                暂停游戏
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 提示 -->
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <div class="flex">
+            <svg class="w-5 h-5 text-amber-600 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            <div class="text-sm text-amber-800">
+              <p class="font-medium mb-1">提示</p>
+              <p>积木会自动吸附到网格上，填满所有网格即可获胜！</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="text-center mt-12 text-sm text-slate-500">
+      <p>使用组件化架构构建 • 支持触摸、鼠标和键盘操作</p>
+    </footer>
+  </div>
+
+  <script type="module">
+    import { Game } from './src/components/Game.js';
+
+    // 等待 DOM 加载完成
+    document.addEventListener('DOMContentLoaded', () => {
+      // 创建游戏实例
+      const game = new Game();
+
+      // 暴露到全局
+      window.game = game;
+
+      // 绑定控制按钮
+      const resetBtn = document.getElementById('reset-btn');
+      const pauseBtn = document.getElementById('pause-btn');
+      const progressBar = document.getElementById('progress-bar');
+      const progressText = document.getElementById('progress-text');
+      const remainingBlocks = document.getElementById('remaining-blocks');
+      const placedBlocks = document.getElementById('placed-blocks');
+
+      let isPaused = false;
+
+      // 重置按钮
+      resetBtn.addEventListener('click', () => {
+        game.reset();
+        updateProgress();
+      });
+
+      // 暂停按钮
+      pauseBtn.addEventListener('click', () => {
+        if (isPaused) {
+          game.resume();
+          pauseBtn.innerHTML = `
+            <span class="flex items-center justify-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              暂停游戏
+            </span>
+          `;
+          pauseBtn.classList.remove('from-emerald-500', 'to-emerald-600', 'hover:from-emerald-600', 'hover:to-emerald-700');
+          pauseBtn.classList.add('from-slate-500', 'to-slate-600', 'hover:from-slate-600', 'hover:to-slate-700');
+        } else {
+          game.pause();
+          pauseBtn.innerHTML = `
+            <span class="flex items-center justify-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              继续游戏
+            </span>
+          `;
+          pauseBtn.classList.remove('from-slate-500', 'to-slate-600', 'hover:from-slate-600', 'hover:to-slate-700');
+          pauseBtn.classList.add('from-emerald-500', 'to-emerald-600', 'hover:from-emerald-600', 'hover:to-emerald-700');
+        }
+        isPaused = !isPaused;
+      });
+
+      // 更新进度
+      function updateProgress() {
+        const grid = game.getGrid();
+        const occupancy = grid.getOccupancy();
+        const total = grid.getCenters().length;
+        let occupied = 0;
+
+        for (const [key, value] of occupancy.entries()) {
+          if (value !== null) occupied++;
+        }
+
+        const percentage = Math.round((occupied / total) * 100);
+        progressBar.style.width = `${percentage}%`;
+        progressText.textContent = `${percentage}%`;
+        remainingBlocks.textContent = 12 - occupied;
+        placedBlocks.textContent = occupied;
+
+        // 完成时的特殊效果
+        if (percentage === 100) {
+          progressBar.classList.add('animate-pulse');
+        } else {
+          progressBar.classList.remove('animate-pulse');
+        }
+      }
+
+      // 定期更新进度
+      setInterval(updateProgress, 100);
+
+      console.log('游戏已初始化');
+    });
+  </script>
+</body>
+</html>

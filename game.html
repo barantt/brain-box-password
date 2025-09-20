@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <title>菱形棋盘 - 可旋转吸附的 L 形积木（Konva）</title>
+  <script src="https://unpkg.com/konva@9/konva.min.js"></script>
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      background: #e9e9e9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #container {
+      width: 900px;
+      height: 700px;
+      background: #e9e9e9;
+      border: 1px solid #bbb;
+    }
+
+    .instructions {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 10px;
+      border-radius: 5px;
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      color: #333;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="container"></div>
+  <div class="instructions">
+    <strong>操作说明:</strong><br>
+    • 点击选中积木<br>
+    • 拖拽旋转控制器旋转<br>
+    • <strong>H键</strong> 或 <strong>左右箭头</strong>: 水平翻转<br>
+    • <strong>V键</strong> 或 <strong>上下箭头</strong>: 垂直翻转<br>
+    • 双击重置积木
+  </div>
+
+  <script>
+    const width = 900;
+    const height = 700;
+    const halfBlockSize = 30;
+    const center = { x: width / 2, y: height / 2 };
+
+    // 重力系统配置
+    const gravity = {
+      force: 0.3,      // 重力加速度
+      friction: 0.98,  // 空气阻力
+      bounce: 5,     // 反弹系数
+      groundY: height  // 地面位置
+    };
+
+    function init() {
+      let gridArr = []
+      for (let i = -4; i <= 4; i++) {
+        for (let j = 5; j >= -5; j--) {
+          if (Math.abs(i % 2) === Math.abs(j % 2)) {
+            continue
+          }
+          const x = i * halfBlockSize + center.x / 2;
+          const y = j * halfBlockSize + center.y;
+          gridArr.push([x, y])
+        }
+      }
+      return gridArr;
+    }
+
+    const playgroundXY = init()
+
+    // 存储有效方格的中心点（在init执行时记住）
+    const validGridCenters = playgroundXY.map(point => ({
+      x: point[0],
+      y: point[1]
+    }));
+
+    // 维护格子占用状态，键为格子坐标字符串，值为占用的积木group
+    const gridOccupancy = new Map();
+    
+    // 初始化所有格子为未占用状态
+    validGridCenters.forEach(grid => {
+      const key = `${Math.round(grid.x)},${Math.round(grid.y)}`;
+      gridOccupancy.set(key, null);
+    });
+
+
+
+    // 格子占用管理函数
+    function getGridKey(x, y) {
+      return `${Math.round(x)},${Math.round(y)}`;
+    }
+    
+    function isGridOccupied(x, y, excludeGroup = null) {
+      const key = getGridKey(x, y);
+      const occupiedBy = gridOccupancy.get(key);
+      return occupiedBy !== null && occupiedBy !== excludeGroup;
+    }
+    
+    function occupyGrid(x, y, group) {
+      const key = getGridKey(x, y);
+      gridOccupancy.set(key, group);
+    }
+    
+    function releaseGrid(x, y) {
+      const key = getGridKey(x, y);
+      gridOccupancy.set(key, null);
+    }
+    
+    function releaseGroupGrids(group) {
+      // 释放该积木占用的所有格子
+      for (const [key, occupiedBy] of gridOccupancy.entries()) {
+        if (occupiedBy === group) {
+          gridOccupancy.set(key, null);
+        }
+      }
+    }
+    
+    // 检查拼图是否完成
+    function checkPuzzleCompletion() {
+      // 计算被占用的格子数量
+      let occupiedCount = 0;
+      for (const [key, occupiedBy] of gridOccupancy.entries()) {
+        if (occupiedBy !== null) {
+          occupiedCount++;
+        }
+      }
+      
+      // 如果所有格子都被占用，则拼图完成
+      if (occupiedCount === validGridCenters.length) {
+        showCompletionMessage();
+        return true;
+      }
+      
+      return false;
+    }
+    
+    // 显示完成庆祝信息
+    function showCompletionMessage() {
+      // 创建庆祝文本
+      const completionText = new Konva.Text({
+        x: width / 2 - 100,
+        y: height / 2 - 50,
+        text: '🎉 恭喜！拼图完成！ 🎉',
+        fontSize: 24,
+        fontFamily: 'Arial',
+        fill: '#ff6b6b',
+        stroke: '#ffffff',
+        strokeWidth: 2,
+        align: 'center',
+        width: 200
+      });
+      
+      // 创建背景矩形
+      const completionBg = new Konva.Rect({
+        x: width / 2 - 120,
+        y: height / 2 - 70,
+        width: 240,
+        height: 100,
+        fill: 'rgba(255, 255, 255, 0.95)',
+        stroke: '#ff6b6b',
+        strokeWidth: 3,
+        cornerRadius: 10,
+        shadowColor: 'black',
+        shadowBlur: 10,
+        shadowOpacity: 0.3
+      });
+      
+      // 创建庆祝组
+      const celebrationGroup = new Konva.Group({
+        name: 'celebration'
+      });
+      
+      celebrationGroup.add(completionBg);
+      celebrationGroup.add(completionText);
+      
+      // 添加闪烁动画
+      const tween = new Konva.Tween({
+        node: celebrationGroup,
+        duration: 0.8,
+        opacity: 0.3,
+        yoyo: true,
+        repeat: -1 // 无限重复
+      });
+      
+      layer.add(celebrationGroup);
+      layer.draw();
+      tween.play();
+      
+      // 5秒后自动隐藏庆祝信息
+      setTimeout(() => {
+        tween.destroy();
+        celebrationGroup.destroy();
+        layer.draw();
+      }, 5000);
+    }
+
+
+    // 根据像素点找到最近的格子，并考虑菱形区域
+    function findNearestGrid(x, y, maxDist) {
+      let best = null;
+      let bestD = Infinity;
+
+      for (const g of validGridCenters) {
+        // 计算到格子中心的距离
+        const dx = g.x - x;
+        const dy = g.y - y;
+        const d = Math.hypot(dx, dy);
+
+        if (d < bestD && d <= maxDist) {
+          bestD = d;
+          best = g;
+        }
+      }
+
+      return best;
+    }
+
+    function snapToGrid(group) {
+      // 获取积木组中的第一个方块作为基准
+      const firstBlock = group.getChildren()[0];
+      if (!firstBlock) return false;
+
+      // 获取方块的尺寸
+      const blockSize = Math.hypot(halfBlockSize, halfBlockSize);
+
+      // 计算第一个方块相对于group的本地中心坐标
+      const blockLocalCenterX = firstBlock.x() + blockSize / 2;
+      const blockLocalCenterY = firstBlock.y() + blockSize / 2;
+
+      // 将方块的本地中心坐标转换为世界坐标
+      const groupTransform = group.getTransform();
+      const rotatedPoint = groupTransform.point({
+        x: blockLocalCenterX,
+        y: blockLocalCenterY
+      });
+
+      const nearestGrid = findNearestGrid(rotatedPoint.x, rotatedPoint.y, halfBlockSize * 3);
+
+      if (nearestGrid) {
+        const currentBlockCenterX = rotatedPoint.x;
+        const currentBlockCenterY = rotatedPoint.y;
+
+        const offsetX = nearestGrid.x - currentBlockCenterX;
+        const offsetY = nearestGrid.y - currentBlockCenterY;
+
+        // 检查吸附后积木的每个方块中心是否都对应到棋盘的有效格子中心点
+        const allBlocksOnValidGrids = group.getChildren().every(block => {
+          const blockLocalCenterX = block.x() + blockSize / 2;
+          const blockLocalCenterY = block.y() + blockSize / 2;
+          
+          // 计算吸附后该方块的世界坐标
+          const futureGroupX = group.x() + offsetX;
+          const futureGroupY = group.y() + offsetY;
+          
+          const futureTransform = new Konva.Transform();
+          futureTransform.translate(futureGroupX, futureGroupY);
+          futureTransform.rotate(group.rotation() * Math.PI / 180);
+          futureTransform.scale(group.scaleX(), group.scaleY());
+          
+          const futureBlockCenter = futureTransform.point({
+            x: blockLocalCenterX,
+            y: blockLocalCenterY
+          });
+          
+          // 检查该方块中心是否在某个有效格子中心上（允许小误差）
+          const tolerance = 5; // 容错范围
+          let targetGrid = null;
+          
+          const isOnValidGrid = validGridCenters.some(gridCenter => {
+            const distance = Math.hypot(
+              futureBlockCenter.x - gridCenter.x,
+              futureBlockCenter.y - gridCenter.y
+            );
+            if (distance <= tolerance) {
+              targetGrid = gridCenter;
+              return true;
+            }
+            return false;
+          });
+          
+          if (!isOnValidGrid) {
+            return false;
+          }
+          
+          // 检查目标格子是否被其他积木占用（排除当前积木）
+          if (isGridOccupied(targetGrid.x, targetGrid.y, group)) {
+            return false;
+          }
+          
+          return true;
+        });
+
+        if (!allBlocksOnValidGrids) {
+          return false;
+        }
+        
+        // 先释放该积木之前占用的格子（如果有）
+        releaseGroupGrids(group);
+        
+        // 所有方块都在有效格子上且未被占用，执行吸附
+        group.x(group.x() + offsetX);
+        group.y(group.y() + offsetY);
+        
+        // 标记新的格子为已占用
+        group.getChildren().forEach(block => {
+          const blockLocalCenterX = block.x() + blockSize / 2;
+          const blockLocalCenterY = block.y() + blockSize / 2;
+          
+          const currentTransform = group.getTransform();
+          const blockWorldPos = currentTransform.point({
+            x: blockLocalCenterX,
+            y: blockLocalCenterY
+          });
+          
+          // 找到最近的格子并标记为已占用
+          const targetGrid = validGridCenters.find(gridCenter => {
+            const distance = Math.hypot(
+              blockWorldPos.x - gridCenter.x,
+              blockWorldPos.y - gridCenter.y
+            );
+            return distance <= 5;
+          });
+          
+          if (targetGrid) {
+            occupyGrid(targetGrid.x, targetGrid.y, group);
+          }
+        });
+        
+        // 锁定为已吸附（停止重力）
+        group.physics.isGrounded = true;
+        group.physics.velocityY = 0;
+        
+        // 检查拼图是否完成
+        checkPuzzleCompletion();
+        
+        return true;
+      }
+
+      return false;
+    }
+
+
+    function singleBlock(x, y, color) {
+      const rect = new Konva.Line({
+        points: [
+          x, y + halfBlockSize,
+          x + halfBlockSize, y,
+          x, y - halfBlockSize,
+          x - halfBlockSize, y
+        ],
+        fill: color,
+        stroke: 'black',
+        strokeWidth: 1,
+        closed: true,
+      });
+      return rect;
+    }
+
+    const stage = new Konva.Stage({
+      container: 'container',
+      width: width,
+      height: height,
+    });
+
+    const layer = new Konva.Layer();
+
+    // 棋盘组
+    const group1 = new Konva.Group({
+      x: 0,
+      y: 0,
+      width: width / 2,
+      height: height,
+      name: 'yellow'
+    });
+
+    const playground = new Konva.Rect({
+      width: width / 2,
+      height: height,
+      fill: 'yellow',
+      stroke: 'black',
+      strokeWidth: 1,
+    });
+    group1.add(playground);
+
+    playgroundXY.forEach(item => {
+      const rect = singleBlock(item[0], item[1], 'white')
+      group1.add(rect);
+    })
+
+
+    // 积木组
+    const group2 = new Konva.Group({
+      x: 0,
+      y: 0,
+      width: width / 2,
+      height: height,
+      name: 'green'
+    });
+
+    // 定义L形积木的形状数据和颜色 (4个不同的L形积木)
+    const lShapes = [
+      // L形积木1
+      {
+        shape: [
+          [1, 0, 0],
+          [1, 0, 0],
+          [1, 0, 0],
+          [1, 0, 0]
+        ],
+        color: {
+          fill: '#572765',      // 红色
+          stroke: '#572765'     // 深红色边框
+        }
+      },
+      {
+        shape: [
+          [1, 0, 0],
+          [1, 0, 0],
+          [1, 0, 0],
+          [1, 1, 0],
+        ],
+        color: {
+          fill: '#193376',      // 青色
+          stroke: '#193376'     // 深青色边框
+        }
+      },
+      {
+        shape: [
+          [1, 0, 0],
+          [1, 1, 0],
+          [1, 1, 0],
+          [0, 0, 0],
+        ],
+        color: {
+          fill: '#e4132e',      // 青色
+          stroke: '#e4132e'     // 深青色边框
+        }
+      },
+      {
+        shape: [
+          [1, 0, 0],
+          [1, 1, 0],
+          [0, 1, 0],
+          [0, 1, 0],
+        ],
+        color: {
+          fill: '#058434',      // 青色
+          stroke: '#058434'     // 深青色边框
+        }
+      },
+      {
+        shape: [
+          [0, 0, 0],
+          [0, 0, 1],
+          [0, 1, 1],
+          [1, 1, 0],
+        ],
+        color: {
+          fill: '#dc506e',      // 青色
+          stroke: '#dc506e'     // 深青色边框
+        }
+      },
+      {
+        shape: [
+          [1, 1, 1],
+          [0, 0, 1],
+          [0, 0, 1],
+          [0, 0, 0],
+        ],
+        color: {
+          fill: '#9dc9ba',      // 青色
+          stroke: '#9dc9ba'     // 深青色边框
+        }
+      },
+      {
+        shape: [
+          [1, 0, 0],
+          [1, 1, 0],
+          [0, 1, 0],
+          [0, 0, 0],
+        ],
+        color: {
+          fill: '#85381c',      // 青色
+          stroke: '#85381c'     // 深青色边框
+        }
+      },
+      {
+        shape: [
+          [0, 0, 0],
+          [0, 1, 1],
+          [0, 0, 1],
+          [0, 1, 1],
+        ],
+        color: {
+          fill: '#dbb301',      // 青色
+          stroke: '#dbb301'     // 深青色边框
+        }
+      },
+      {
+        shape: [
+          [1, 0, 0],
+          [1, 0, 0],
+          [1, 1, 0],
+          [0, 0, 0],
+        ],
+        color: {
+          fill: '#fe200c',      // 青色
+          stroke: '#fe200c'     // 深青色边框
+        }
+      },
+      {
+        shape: [
+          [1, 0, 0],
+          [1, 0, 0],
+          [1, 1, 0],
+          [1, 0, 0],
+        ],
+        color: {
+          fill: '#dfbca8',      // 青色
+          stroke: '#dfbca8'     // 深青色边框
+        }
+      },
+      {
+        shape: [
+          [1, 0, 0],
+          [1, 1, 0],
+          [1, 0, 0],
+          [0, 0, 0],
+        ],
+        color: {
+          fill: '#9daf26',
+          stroke: '#9daf26'
+        }
+      },
+      {
+        shape: [
+          [1, 0, 0],
+          [1, 1, 0],
+          [0, 0, 0],
+          [0, 0, 0],
+        ],
+        color: {
+          fill: '#cfc2a4',      // 青色
+          stroke: '#cfc2a4'     // 深青色边框
+        }
+      }
+    ];
+
+    let transformerNodes = []
+
+    // 积木翻转函数
+    function flipBlock(group, direction) {
+      if (direction === 'horizontal') {
+        // 水平翻转
+        group.physics.isFlippedX = !group.physics.isFlippedX;
+        const scaleX = group.physics.isFlippedX ? -1 : 1;
+        group.scaleX(scaleX);
+      } else if (direction === 'vertical') {
+        // 垂直翻转
+        group.physics.isFlippedY = !group.physics.isFlippedY;
+        const scaleY = group.physics.isFlippedY ? -1 : 1;
+        group.scaleY(scaleY);
+      }
+      layer.draw();
+    }
+
+    // 获取当前选中的积木
+    function getSelectedBlock() {
+      return transformerNodes.find(node => node.physics.isSelected);
+    }
+
+    // 创建所有L形积木，为每个积木设置不同的初始位置
+    for (let shapeIndex = 0; shapeIndex < lShapes.length; shapeIndex++) {
+      const shapeConfig = lShapes[shapeIndex];  // 获取积木配置
+      const shapeData = shapeConfig.shape;      // 获取形状数据
+      const shapeColor = shapeConfig.color;     // 获取颜色配置
+
+      // 为每个积木设置不同的初始位置，避免重叠
+      const baseX = width / 2; // 在右侧区域的固定起始位置
+      const baseY = shapeIndex * 120; // 垂直排列，每个积木间隔120像素
+
+      const tmpGroup = new Konva.Group({
+        x: baseX + 150,
+        y: baseY + 50,
+        draggable: true,
+        rotation: 45
+      });
+
+      // 根据二维数组渲染小方块
+      for (let row = 0; row < 4; row++) {
+        for (let col = 0; col < 3; col++) {
+          if (shapeData[row] && shapeData[row][col] === 1) {
+            const blockSize = Math.hypot(halfBlockSize, halfBlockSize);
+            const block = new Konva.Rect({
+              x: col * blockSize,  // 相对于tmpGroup的坐标
+              y: row * blockSize,  // 相对于tmpGroup的坐标
+              width: blockSize,
+              height: blockSize,
+              fill: shapeColor.fill,        // 使用自定义填充颜色
+              stroke: shapeColor.stroke,              // 增加边框宽度让颜色更明显
+            });
+            tmpGroup.add(block);
+          }
+        }
+      }
+
+      // 为每个积木添加物理属性
+      tmpGroup.physics = {
+        velocityY: 0,      // Y轴速度
+        isGrounded: false, // 是否在地面上
+        isDragging: false, // 是否正在被拖拽
+        isSelected: false, // 是否被选中
+        isFlippedX: false, // 是否水平翻转
+        isFlippedY: false  // 是否垂直翻转
+      };
+
+      transformerNodes.push(tmpGroup)
+      group2.add(tmpGroup);
+    }
+
+    // 创建一个空的Transformer，稍后动态绑定到被选中的积木
+    const tr = new Konva.Transformer({
+      rotationSnaps: [0, 45, 135, 225, 315],
+      rotationSnapTolerance: 45,
+      enabledAnchors: [],
+      resizeEnabled: false,
+      borderEnabled: false,
+    });
+
+    // 为每个tmpGroup添加点击事件监听，实现单独选择
+    transformerNodes.forEach(tmpGroup => {
+      tmpGroup.on('click', function () {
+        transformerNodes.forEach(node => node.physics.isSelected = false);
+        this.physics.isSelected = true;
+        this.physics.velocityY = 0;
+        tr.nodes([tmpGroup]);
+        layer.draw();
+      });
+
+      tmpGroup.on('dblclick', function () {
+        // 重新从顶部开始掉落
+        releaseGroupGrids(this); // 释放占用的格子
+        this.y(50);
+        this.physics.velocityY = 0;
+        this.physics.isGrounded = false;  // 重置为未落地，重新启用重力
+        this.physics.isSelected = false;
+        tr.nodes([]);
+        
+        // 隐藏可能存在的庆祝信息
+        const celebrationGroup = layer.findOne('.celebration');
+        if (celebrationGroup) {
+          celebrationGroup.destroy();
+        }
+        
+        layer.draw();
+      });
+
+      tmpGroup.on('dragstart', function () {
+        this.physics.isDragging = true;
+        // 开始拖拽时释放该积木占用的所有格子
+        releaseGroupGrids(this);
+        this.physics.isGrounded = false; // 重新启用重力（如果未吸附成功）
+        this.opacity(0.9);
+      });
+
+      tmpGroup.on('dragend', function () {
+        this.physics.isDragging = false;
+
+        // 用新的吸附函数尝试吸附
+        const snapped = snapToGrid(this);
+
+        // 若未吸附成功且之前没有落地，才重新启用重力
+        if (!snapped && !this.physics.isGrounded) {
+          // 只有从未落地的积木才会重新开始下落
+          // 这里不需要设置 isGrounded = false，因为它本来就是 false
+        }
+
+        this.opacity(1);
+        layer.draw();
+      });
+    });
+
+    // 重力系统更新函数
+    function updatePhysics() {
+      transformerNodes.forEach(tmpGroup => {
+        const physics = tmpGroup.physics;
+
+        // 被拖拽、被选中或已落地的积木，不应用重力
+        if (physics.isDragging || physics.isSelected || physics.isGrounded) {
+          return; // forEach 的 return 继续下一个节点
+        }
+
+        // 获取绝对包围盒来判断底部（考虑旋转）
+        const box = tmpGroup.getClientRect();
+        const bottom = box.y + box.height;
+
+        // 如果已经撞到地面
+        if (bottom >= gravity.groundY) {
+          // 把 group 调整到地面位置
+          const delta = gravity.groundY - bottom; // 通常为 <= 0
+          tmpGroup.y(tmpGroup.y() + delta);
+          
+          // 永久设置为已落地，不再受重力影响
+          physics.isGrounded = true;
+          physics.velocityY = 0;
+        } else {
+          // 在空中，应用重力
+          physics.velocityY += gravity.force;
+          physics.velocityY *= gravity.friction;
+
+          // 将速度直接作为局部 y 的增量（父容器无旋转时成立）
+          tmpGroup.y(tmpGroup.y() + physics.velocityY);
+        }
+      });
+
+      layer.draw();
+    }
+
+    // 启动重力系统
+    const anim = new Konva.Animation(updatePhysics, layer);
+    anim.start();
+
+    // 点击空白区域取消选择
+    stage.on('click', function (e) {
+      // 如果点击的不是积木，则取消Transformer的选择
+      if (e.target === stage || e.target.getParent() === group1 || e.target.getParent() === group2) {
+        // 取消所有积木的选中状态，恢复重力
+        transformerNodes.forEach(node => {
+          node.physics.isSelected = false;
+        });
+
+        tr.nodes([]);
+        layer.draw();
+      }
+    });
+
+    // 添加键盘事件监听器处理翻转操作
+    window.addEventListener('keydown', function(e) {
+      const selectedBlock = getSelectedBlock();
+      if (!selectedBlock) return; // 没有选中的积木
+      
+      switch(e.key.toLowerCase()) {
+        case 'h': // H键 - 水平翻转
+        case 'arrowleft': // 左箭头 - 水平翻转
+        case 'arrowright': // 右箭头 - 水平翻转
+          e.preventDefault();
+          flipBlock(selectedBlock, 'horizontal');
+          break;
+        case 'v': // V键 - 垂直翻转
+        case 'arrowup': // 上箭头 - 垂直翻转
+        case 'arrowdown': // 下箭头 - 垂直翻转
+          e.preventDefault();
+          flipBlock(selectedBlock, 'vertical');
+          break;
+      }
+    });
+
+
+    layer.add(group1);
+    layer.add(group2)
+    layer.add(tr);
+    stage.add(layer);
+  </script>
+</body>
+
+</html>

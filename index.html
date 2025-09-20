@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>菱形棋盘 - 可旋转吸附的 L 形积木（组件化版本）</title>
+  <script src="https://unpkg.com/konva@9/konva.min.js"></script>
+</head>
+<body>
+  <script type="module">
+    import { Game } from './src/components/Game.js';
+
+    // 等待 DOM 加载完成
+    document.addEventListener('DOMContentLoaded', () => {
+      // 创建游戏实例
+      const game = new Game();
+
+      // 将游戏实例暴露到全局，方便调试
+      window.game = game;
+    });
+  </script>
+</body>
+</html>
