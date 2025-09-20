@@ -8,8 +8,11 @@ This is an interactive L-shaped block puzzle game built with vanilla JavaScript 
 
 ## Architecture
 
-### Single-File Structure
-The entire application is contained in `game.html` with embedded HTML, CSS, and JavaScript. There is no build system or package management.
+### Project Structure
+The project exists in multiple forms:
+- **Modular ES6 Version** (`src/` directory): Modern component-based architecture
+- **Monolithic Version** (`game.html`): Original single-file implementation for reference
+- **No Build System**: Client-side only with CDN dependencies (Konva.js)
 
 ### Key Components
 - **Game Canvas**: 900x700px Konva.js stage
@@ -32,11 +35,17 @@ The entire application is contained in `game.html` with embedded HTML, CSS, and 
 
 ## Development Commands
 
-The game is now organized as a modular ES6 application:
-- Open `index.html` for the original version
-- Open `game-tailwind.html` for the Tailwind CSS enhanced version
-- Use `test.html` for debugging with console access
-- Modern browsers with ES6 module support required
+### Running the Game
+- **Main Version**: Open `index.html` in a modern browser (loads modular ES6 version)
+- **Enhanced UI**: Open `game-tailwind.html` for Tailwind CSS styling
+- **Debug Mode**: Open `test.html` - exposes game instance to `window.game` for console debugging
+- **Legacy Reference**: Open `game.html` for original monolithic implementation
+
+### Testing
+- No automated test framework
+- Use `test.html` for manual testing and debugging
+- Access game state via browser console: `window.game`
+- Test on browsers with ES6 module support
 
 ## Tailwind CSS Integration
 
@@ -106,7 +115,7 @@ src/
 
 ## Configuration
 
-### Game Settings (lines 56-67)
+### Game Settings (`src/config/gameConfig.js`)
 ```javascript
 const width = 900;
 const height = 700;
@@ -119,13 +128,34 @@ const gravity = {
 };
 ```
 
-### Block Colors
-Each of the 12 blocks has a unique color scheme defined in the `createLBlock()` function.
+### Block Configuration
+- 12 unique L-shaped blocks with distinct colors
+- Each block defined by shape coordinates and color
+- Configurable physics parameters per block
+- Shape definitions in `src/config/gameConfig.js:shapes`
 
-## Important Notes
+## Implementation Details
 
-- The game uses Konva.js loaded from CDN
-- All coordinates are relative to the canvas center
-- Grid positions use a diamond pattern with offset rows
-- Physics simulation runs via Konva.Animation
-- Chinese UI text is embedded in the HTML
+### Physics System
+- Custom gravity simulation in `src/components/Physics.js`
+- Animation loop powered by Konva.Animation
+- Configurable gravity force, friction, and bounce
+- Collision detection between blocks and grid boundaries
+
+### Grid System
+- Diamond-shaped 11x9 grid with offset coordinates
+- Grid cells calculated from center point
+- Occupancy tracking prevents block overlap
+- Automatic snap-to-grid on block release
+
+### Component Communication
+- Event-driven architecture using custom events
+- Game class orchestrates all component interactions
+- InputHandler manages user input and forwards to Game
+- Physics updates block positions independently
+
+### Browser Requirements
+- Modern browser with ES6 module support
+- No polyfills or transpilation required
+- Works offline after initial load
+- Chinese language UI (no internationalization)

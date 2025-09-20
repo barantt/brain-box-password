@@ -12,6 +12,14 @@ export class UI {
    * 显示完成庆祝信息
    */
   showCompletionMessage() {
+    // 如果使用外部UI，只触发事件但不显示Konva的庆祝消息
+    if (this.isExternalUI) {
+      // 触发自定义事件，让外部UI处理
+      const event = new CustomEvent('gameCompleted');
+      document.dispatchEvent(event);
+      return;
+    }
+
     // 隐藏之前的庆祝信息
     this.hideCompletionMessage();
 
@@ -52,7 +60,11 @@ export class UI {
     this.celebrationGroup.add(completionBg);
     this.celebrationGroup.add(completionText);
 
-    // 添加闪烁动画
+    // 先添加到图层
+    this.game.layer.add(this.celebrationGroup);
+    this.game.layer.draw();
+
+    // 然后创建闪烁动画（确保节点已经在图层中）
     this.celebrationTween = new Konva.Tween({
       node: this.celebrationGroup,
       duration: GAME_CONFIG.ui.celebration.tweenDuration,
@@ -61,8 +73,6 @@ export class UI {
       repeat: -1
     });
 
-    this.game.layer.add(this.celebrationGroup);
-    this.game.layer.draw();
     this.celebrationTween.play();
 
     // 5秒后自动隐藏
