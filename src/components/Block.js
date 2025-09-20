@@ -82,11 +82,6 @@ export class Block {
       this.select();
     });
 
-    // 双击重置
-    this.group.on('dblclick', () => {
-      this.reset();
-    });
-
     // 拖拽开始
     this.group.on('dragstart', () => {
       this.group.physics.isDragging = true;

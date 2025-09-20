@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>菱形棋盘游戏 - Tailwind CSS 版本</title>
+  <title>菱形棋盘拼图游戏</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/konva@9/konva.min.js"></script>
   <script>
@@ -16,394 +16,580 @@
               grid: '#fbbf24',
               accent: '#ef4444'
             }
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.5s ease-in-out',
+            'slide-up': 'slideUp 0.3s ease-out',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(10px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            }
           }
         }
       }
     }
   </script>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center p-4">
-  <!-- 游戏主容器 -->
-  <div class="max-w-7xl w-full">
-    <!-- 游戏标题 -->
-    <header class="text-center mb-8">
-      <h1 class="text-5xl font-bold text-slate-800 mb-3 tracking-tight">菱形棋盘拼图</h1>
-      <p class="text-lg text-slate-600">将所有 L 形积木填满菱形网格</p>
-    </header>
-
-    <!-- 游戏主体 -->
-    <main class="flex flex-col xl:flex-row gap-8 items-start justify-center">
-      <!-- 游戏画布容器 -->
-      <div class="flex-1 flex justify-center">
-        <div class="bg-white rounded-2xl shadow-2xl p-6 border border-slate-200">
-          <div id="container" class="relative"></div>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+  <!-- 顶部导航栏 -->
+  <nav class="bg-white shadow-sm border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center">
+          <h1 class="text-xl font-bold text-slate-800" data-i18n="gameTitle">菱形棋盘拼图</h1>
+        </div>
+        <div class="flex items-center space-x-4">
+          <!-- 语言切换 -->
+          <div class="flex bg-slate-100 rounded-lg p-1">
+            <button class="lang-btn px-3 py-1 text-sm font-medium rounded-md transition-all bg-white text-slate-800 shadow-sm" data-lang="zh">中文</button>
+            <button class="lang-btn px-3 py-1 text-sm font-medium rounded-md transition-all text-slate-600 hover:text-slate-800" data-lang="en">English</button>
+          </div>
+          <!-- 排行榜按钮 -->
+          <button id="leaderboard-btn" class="flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white font-medium rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all transform hover:scale-105">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span data-i18n="leaderboard">排行榜</span>
+          </button>
         </div>
       </div>
+    </div>
+  </nav>
 
-      <!-- 侧边栏 -->
-      <aside class="w-full xl:w-96 space-y-6">
-        <!-- 操作说明卡片 -->
-        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-7">
-          <h2 class="text-2xl font-bold text-slate-800 mb-5 flex items-center">
-            <svg class="w-6 h-6 mr-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            操作指南
-          </h2>
-          <div class="space-y-4">
-            <div class="flex items-start">
-              <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                <span class="text-blue-600 font-semibold text-sm">1</span>
-              </div>
-              <div>
-                <h3 class="font-medium text-slate-800">选择积木</h3>
-                <p class="text-sm text-slate-600 mt-1">点击积木进行选择</p>
+  <!-- 主游戏区域 -->
+  <main class="flex-1">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <!-- 左侧游戏区域 -->
+        <div class="lg:col-span-3">
+          <div class="bg-white rounded-2xl shadow-xl p-6">
+            <div class="flex justify-between items-center mb-6">
+              <h2 class="text-2xl font-bold text-slate-800" data-i18n="gameArea">游戏区域</h2>
+              <div class="flex items-center space-x-3">
+                <button id="reset-btn" class="flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105">
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span data-i18n="reset">重新开始</span>
+                </button>
+                <button id="pause-btn" class="flex items-center px-4 py-2 bg-gradient-to-r from-slate-500 to-slate-600 text-white font-medium rounded-lg hover:from-slate-600 hover:to-slate-700 transition-all transform hover:scale-105">
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span data-i18n="pause">暂停</span>
+                </button>
               </div>
             </div>
-            <div class="flex items-start">
-              <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                <span class="text-blue-600 font-semibold text-sm">2</span>
-              </div>
+            <div id="container" class="flex justify-center"></div>
+          </div>
+        </div>
 
-              <div>
-                <h3 class="font-medium text-slate-800">旋转积木</h3>
-                <p class="text-sm text-slate-600 mt-1">拖拽旋转控制器，或使用快捷键：</p>
-                <div class="text-sm text-slate-600 mt-1 space-y-1">
-                  <div class="flex items-center">
-                    <span class="inline-flex items-center px-2.5 py-1 bg-slate-100 rounded-lg text-sm font-mono font-medium text-slate-700 w-8 justify-center mr-2">R</span>
-                    <span>顺时针旋转 90°</span>
-                  </div>
-                  <div class="flex items-center">
-                    <span class="inline-flex items-center px-2.5 py-1 bg-slate-100 rounded-lg text-sm font-mono font-medium text-slate-700 w-8 justify-center mr-2">L</span>
-                    <span>逆时针旋转 90°</span>
-                  </div>
+        <!-- 右侧信息面板 -->
+        <div class="lg:col-span-1 space-y-6">
+          <!-- 游戏信息 -->
+          <div class="bg-white rounded-2xl shadow-xl p-6">
+            <h3 class="text-lg font-semibold text-slate-800 mb-4" data-i18n="gameInfo">游戏信息</h3>
+            <div class="space-y-3">
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-slate-600" data-i18n="completionTime">完成时间</span>
+                <span id="timer" class="text-lg font-bold text-slate-800">00:00</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-slate-600" data-i18n="bestTime">最佳时间</span>
+                <span id="best-time" class="text-lg font-bold text-emerald-600">--:--</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 操作说明 -->
+          <div class="bg-white rounded-2xl shadow-xl p-6">
+            <h3 class="text-lg font-semibold text-slate-800 mb-4" data-i18n="controls">操作说明</h3>
+            <div class="space-y-3 text-sm">
+              <div class="flex items-start">
+                <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                  <span class="text-xs font-bold text-blue-600">1</span>
+                </div>
+                <div>
+                  <p class="text-slate-700" data-i18n="selectBlock">点击选择积木</p>
+                </div>
+              </div>
+              <div class="flex items-start">
+                <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                  <span class="text-xs font-bold text-blue-600">2</span>
+                </div>
+                <div>
+                  <p class="text-slate-700" data-i18n="rotateBlock">旋转积木</p>
+                  <p class="text-xs text-slate-500 mt-1">
+                    <span class="inline-flex items-center px-2 py-1 bg-slate-100 rounded mr-1">R</span>
+                    <span data-i18n="clockwise">顺时针</span>
+                    <span class="inline-flex items-center px-2 py-1 bg-slate-100 rounded mx-1">L</span>
+                    <span data-i18n="counterclockwise">逆时针</span>
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-start">
+                <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                  <span class="text-xs font-bold text-blue-600">3</span>
+                </div>
+                <div>
+                  <p class="text-slate-700" data-i18n="flipBlock">翻转积木</p>
+                  <p class="text-xs text-slate-500 mt-1">
+                    <span class="inline-flex items-center px-2 py-1 bg-slate-100 rounded mr-1">H</span>
+                    <span data-i18n="horizontal">水平</span>
+                    <span class="inline-flex items-center px-2 py-1 bg-slate-100 rounded mx-1">V</span>
+                    <span data-i18n="vertical">垂直</span>
+                  </p>
                 </div>
               </div>
             </div>
-            <div class="flex items-start">
-              <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                <span class="text-blue-600 font-semibold text-sm">3</span>
-              </div>
-              <div>
-                <h3 class="font-medium text-slate-800">翻转积木</h3>
-                <p class="text-sm text-slate-600 mt-1">
-                  <span class="inline-flex items-center px-2.5 py-1 bg-slate-100 rounded-lg text-sm font-mono font-medium text-slate-700 mr-2">H</span>
-                  <span class="text-slate-500">或</span>
-                  <span class="inline-flex items-center px-2.5 py-1 bg-slate-100 rounded-lg text-sm font-mono font-medium text-slate-700 mx-2">← →</span>
-                  水平翻转
-                </p>
-                <p class="text-sm text-slate-600 mt-1">
-                  <span class="inline-flex items-center px-2.5 py-1 bg-slate-100 rounded-lg text-sm font-mono font-medium text-slate-700 mr-2">V</span>
-                  <span class="text-slate-500">或</span>
-                  <span class="inline-flex items-center px-2.5 py-1 bg-slate-100 rounded-lg text-sm font-mono font-medium text-slate-700 mx-2">↑ ↓</span>
-                  垂直翻转
-                </p>
-              </div>
+          </div>
+
+          <!-- 快速排行榜 -->
+          <div class="bg-white rounded-2xl shadow-xl p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold text-slate-800" data-i18n="topScores">最佳成绩</h3>
+              <button class="text-sm text-purple-600 hover:text-purple-700 font-medium" onclick="showLeaderboard()" data-i18n="viewAll">查看全部</button>
             </div>
-            <div class="flex items-start">
-              <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                <span class="text-blue-600 font-semibold text-sm">4</span>
-              </div>
-              <div>
-                <h3 class="font-medium text-slate-800">重置位置</h3>
-              </div>
+            <div id="top-scores" class="space-y-2">
+              <p class="text-sm text-slate-500 text-center py-4" data-i18n="noRecords">暂无记录</p>
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </main>
 
-        <!-- 控制按钮 -->
-        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-7">
-          <h2 class="text-2xl font-bold text-slate-800 mb-5 flex items-center">
-            <svg class="w-6 h-6 mr-3 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-            </svg>
-            游戏控制
-          </h2>
-          <div class="space-y-3">
-            <button id="reset-btn" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg">
-              <span class="flex items-center justify-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                重新开始
-              </span>
-            </button>
-            <button id="pause-btn" class="w-full bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg">
-              <span class="flex items-center justify-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                暂停游戏
-              </span>
-            </button>
-          </div>
+  <!-- 排行榜模态框 -->
+  <div id="leaderboard-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onclick="hideLeaderboard()"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full max-h-[80vh] overflow-hidden animate-slide-up">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-slate-800" data-i18n="leaderboard">排行榜</h2>
+        <button onclick="hideLeaderboard()" class="text-slate-400 hover:text-slate-600 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+        <div class="grid grid-cols-12 gap-4 px-4 py-2 bg-slate-50 rounded-lg font-semibold text-sm text-slate-700">
+          <div class="col-span-1 text-center">#</div>
+          <div class="col-span-6" data-i18n="player">玩家</div>
+          <div class="col-span-3 text-center" data-i18n="time">时间</div>
+          <div class="col-span-2 text-center" data-i18n="date">日期</div>
+        </div>
+        <div id="leaderboard-list" class="space-y-2">
+          <!-- 动态填充 -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 成功提示模态框 -->
+  <div id="success-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
+    <div class="relative bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full transform transition-all duration-500 scale-95 opacity-0" id="success-content">
+      <div class="text-center">
+        <div class="w-20 h-20 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+          <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+          </svg>
         </div>
 
-        <!-- 提示 -->
-        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
-          <div class="flex">
-            <svg class="w-5 h-5 text-amber-600 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-            </svg>
-            <div class="text-sm text-amber-800">
-              <p class="font-medium mb-1">提示</p>
-              <p>积木会自动吸附到网格上，填满所有网格即可获胜！</p>
-            </div>
-          </div>
-        </div>
-      </aside>
-    </main>
+        <h2 class="text-3xl font-bold text-slate-800 mb-2" data-i18n="congratulations">恭喜完成！</h2>
+        <p class="text-slate-600 mb-6" data-i18n="completionMessage">太棒了！你成功完成了拼图！</p>
 
-    <!-- 成功提示模态框 -->
-    <div id="success-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-      <!-- 背景遮罩 -->
-      <div class="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity"></div>
-
-      <!-- 模态框内容 -->
-      <div class="relative bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full transform transition-all duration-500 scale-95 opacity-0" id="success-content">
-        <!-- 成功图标 -->
-        <div class="flex justify-center mb-6">
-          <div class="w-20 h-20 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center animate-bounce">
-            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-            </svg>
-          </div>
-        </div>
-
-        <!-- 标题 -->
-        <h2 class="text-3xl font-bold text-center text-slate-800 mb-4">🎉 恭喜完成！</h2>
-
-        <!-- 描述文字 -->
-        <p class="text-center text-slate-600 mb-6">
-          太棒了！你成功将所有 L 形积木填满了菱形网格！
-        </p>
-
-        <!-- 统计信息 -->
         <div class="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-2xl p-6 mb-6">
           <div class="grid grid-cols-2 gap-4">
-            <div class="text-center">
-              <p class="text-3xl font-bold text-emerald-600" id="completion-time">--:--</p>
-              <p class="text-sm text-slate-600 mt-1">完成时间</p>
+            <div>
+              <p class="text-sm text-slate-600 mb-1" data-i18n="completionTime">完成时间</p>
+              <p id="completion-time" class="text-2xl font-bold text-emerald-600">--:--</p>
             </div>
-            <div class="text-center">
-              <p class="text-3xl font-bold text-blue-600">12</p>
-              <p class="text-sm text-slate-600 mt-1">积木总数</p>
+            <div>
+              <p class="text-sm text-slate-600 mb-1" data-i18n="ranking">排名</p>
+              <p id="ranking" class="text-2xl font-bold text-blue-600">-</p>
             </div>
           </div>
         </div>
 
-      <!-- 名字输入 -->
         <div class="mb-6">
-          <label for="player-name" class="block text-sm font-medium text-slate-700 mb-2">输入你的名字</label>
+          <label for="player-name" class="block text-sm font-medium text-slate-700 mb-2" data-i18n="enterName">输入你的名字</label>
           <input
             type="text"
             id="player-name"
             maxlength="20"
             placeholder="请输入名字"
-            class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors text-slate-800 placeholder-slate-400"
+            class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+            data-i18n-placeholder="namePlaceholder"
           >
         </div>
 
-        <!-- 按钮组 -->
         <div class="flex gap-3">
-          <button id="submit-score-btn" class="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg">
+          <button id="submit-score-btn" class="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold py-3 px-4 rounded-xl transition-all transform hover:scale-105">
             <span class="flex items-center justify-center">
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              提交记录
+              <span data-i18n="submitScore">提交记录</span>
             </span>
           </button>
-          <button id="new-game-btn" class="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg">
+          <button id="new-game-btn" class="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-all transform hover:scale-105">
             <span class="flex items-center justify-center">
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
-              新游戏
+              <span data-i18n="newGame">新游戏</span>
             </span>
           </button>
         </div>
-
-        <!-- 排行榜预览 -->
-        <div id="leaderboard-preview" class="hidden mt-6 p-4 bg-slate-50 rounded-xl">
-          <h3 class="text-sm font-semibold text-slate-800 mb-3 flex items-center">
-            <svg class="w-4 h-4 mr-2 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-            本局排名
-          </h3>
-          <div id="recent-scores" class="space-y-1">
-            <!-- 动态填充 -->
-          </div>
-        </div>
       </div>
     </div>
-
-    <!-- 页脚 -->
-    <footer class="text-center mt-12 text-sm text-slate-500">
-      <p>使用组件化架构构建 • 支持触摸、鼠标和键盘操作</p>
-    </footer>
   </div>
 
   <script type="module">
     import { Game } from './src/components/Game.js';
 
+    // 国际化配置
+    const i18n = {
+      zh: {
+        gameTitle: '菱形棋盘拼图',
+        leaderboard: '排行榜',
+        reset: '重新开始',
+        pause: '暂停',
+        gameArea: '游戏区域',
+        gameInfo: '游戏信息',
+        completionTime: '完成时间',
+        bestTime: '最佳时间',
+        controls: '操作说明',
+        selectBlock: '点击选择积木',
+        rotateBlock: '旋转积木',
+        clockwise: '顺时针',
+        counterclockwise: '逆时针',
+        flipBlock: '翻转积木',
+        horizontal: '水平',
+        vertical: '垂直',
+        topScores: '最佳成绩',
+        viewAll: '查看全部',
+        noRecords: '暂无记录',
+        player: '玩家',
+        time: '时间',
+        date: '日期',
+        congratulations: '恭喜完成！',
+        completionMessage: '太棒了！你成功完成了拼图！',
+        ranking: '排名',
+        enterName: '输入你的名字',
+        namePlaceholder: '请输入名字',
+        submitScore: '提交记录',
+        newGame: '新游戏',
+        resume: '继续游戏',
+        close: '关闭',
+        loading: '加载中...'
+      },
+      en: {
+        gameTitle: 'Diamond Block Puzzle',
+        leaderboard: 'Leaderboard',
+        reset: 'Reset',
+        pause: 'Pause',
+        gameArea: 'Game Area',
+        gameInfo: 'Game Info',
+        completionTime: 'Completion Time',
+        bestTime: 'Best Time',
+        controls: 'Controls',
+        selectBlock: 'Click to select block',
+        rotateBlock: 'Rotate block',
+        clockwise: 'Clockwise',
+        counterclockwise: 'Counterclockwise',
+        flipBlock: 'Flip block',
+        horizontal: 'Horizontal',
+        vertical: 'Vertical',
+        topScores: 'Top Scores',
+        viewAll: 'View All',
+        noRecords: 'No records yet',
+        player: 'Player',
+        time: 'Time',
+        date: 'Date',
+        congratulations: 'Congratulations!',
+        completionMessage: 'Awesome! You completed the puzzle!',
+        ranking: 'Ranking',
+        enterName: 'Enter your name',
+        namePlaceholder: 'Enter your name',
+        submitScore: 'Submit Score',
+        newGame: 'New Game',
+        resume: 'Resume',
+        close: 'Close',
+        loading: 'Loading...'
+      }
+    };
+
+    let currentLang = localStorage.getItem('gameLang') || 'zh';
+
+    // 更新界面语言
+    function updateLanguage() {
+      document.querySelectorAll('[data-i18n]').forEach(elem => {
+        const key = elem.getAttribute('data-i18n');
+        if (i18n[currentLang][key]) {
+          elem.textContent = i18n[currentLang][key];
+        }
+      });
+
+      // 更新 placeholder
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(elem => {
+        const key = elem.getAttribute('data-i18n-placeholder');
+        if (i18n[currentLang][key]) {
+          elem.placeholder = i18n[currentLang][key];
+        }
+      });
+
+      // 更新语言按钮状态
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        if (btn.dataset.lang === currentLang) {
+          btn.classList.add('bg-white', 'text-slate-800', 'shadow-sm');
+          btn.classList.remove('text-slate-600');
+        } else {
+          btn.classList.remove('bg-white', 'text-slate-800', 'shadow-sm');
+          btn.classList.add('text-slate-600');
+        }
+      });
+    }
+
+    // 语言切换
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentLang = btn.dataset.lang;
+        localStorage.setItem('gameLang', currentLang);
+        updateLanguage();
+      });
+    });
+
+    // 分数管理
+    function getScores() {
+      const scores = localStorage.getItem('brainBoxScores');
+      return scores ? JSON.parse(scores) : [];
+    }
+
+    function saveScore(name, time) {
+      const scores = getScores();
+      const newScore = {
+        name: name || i18n[currentLang].anonymous || 'Anonymous',
+        time: time,
+        date: new Date().toISOString()
+      };
+      scores.push(newScore);
+      scores.sort((a, b) => a.time - b.time);
+      localStorage.setItem('brainBoxScores', JSON.stringify(scores.slice(0, 50)));
+      return scores;
+    }
+
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return `${date.getMonth() + 1}/${date.getDate()}`;
+    }
+
+    function updateTopScores() {
+      const scores = getScores().slice(0, 3);
+      const topScoresEl = document.getElementById('top-scores');
+
+      if (scores.length === 0) {
+        topScoresEl.innerHTML = `<p class="text-sm text-slate-500 text-center py-4" data-i18n="noRecords">${i18n[currentLang].noRecords}</p>`;
+        return;
+      }
+
+      topScoresEl.innerHTML = scores.map((score, index) => `
+        <div class="flex items-center justify-between py-2 px-3 rounded-lg ${index === 0 ? 'bg-amber-50 border border-amber-200' : 'bg-slate-50'}">
+          <div class="flex items-center">
+            <span class="text-lg font-bold ${index === 0 ? 'text-amber-600' : 'text-slate-600'} mr-3">#${index + 1}</span>
+            <span class="font-medium text-slate-800">${score.name}</span>
+          </div>
+          <span class="text-sm font-semibold text-slate-600">${formatTime(score.time)}</span>
+        </div>
+      `).join('');
+    }
+
+    function updateBestTime() {
+      const scores = getScores();
+      const bestTimeEl = document.getElementById('best-time');
+      if (scores.length > 0) {
+        bestTimeEl.textContent = formatTime(scores[0].time);
+      } else {
+        bestTimeEl.textContent = '--:--';
+      }
+    }
+
+    // 排行榜功能
+    window.showLeaderboard = function() {
+      const modal = document.getElementById('leaderboard-modal');
+      const list = document.getElementById('leaderboard-list');
+      const scores = getScores();
+
+      if (scores.length === 0) {
+        list.innerHTML = `<p class="text-center py-8 text-slate-500" data-i18n="noRecords">${i18n[currentLang].noRecords}</p>`;
+      } else {
+        list.innerHTML = scores.map((score, index) => `
+          <div class="grid grid-cols-12 gap-4 px-4 py-3 bg-white rounded-lg border ${index < 3 ? 'border-amber-200 bg-amber-50/30' : 'border-slate-200'}">
+            <div class="col-span-1 text-center">
+              <span class="text-lg font-bold ${index === 0 ? 'text-amber-600' : index === 1 ? 'text-slate-400' : index === 2 ? 'text-amber-700' : 'text-slate-600'}">#${index + 1}</span>
+            </div>
+            <div class="col-span-6 font-medium text-slate-800">${score.name}</div>
+            <div class="col-span-3 text-center font-semibold text-slate-600">${formatTime(score.time)}</div>
+            <div class="col-span-2 text-center text-sm text-slate-500">${formatDate(score.date)}</div>
+          </div>
+        `).join('');
+      }
+
+      modal.classList.remove('hidden');
+      updateLanguage(); // 确保模态框内的文本也更新了语言
+    }
+
+    window.hideLeaderboard = function() {
+      document.getElementById('leaderboard-modal').classList.add('hidden');
+    }
+
+    // 计时器
+    let timerInterval = null;
+    let startTime = Date.now();
+
+    function startTimer() {
+      startTime = Date.now();
+      timerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        document.getElementById('timer').textContent = formatTime(elapsed);
+      }, 100);
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
     // 等待 DOM 加载完成
     document.addEventListener('DOMContentLoaded', () => {
       // 创建游戏实例
       const game = new Game();
-
-      // 标记使用外部UI
       game.ui.setExternalUI(true);
-
-      // 暴露到全局
       window.game = game;
 
-      // 绑定控制按钮
+      // 初始化界面
+      updateLanguage();
+      updateTopScores();
+      updateBestTime();
+      startTimer();
+
+      // 绑定按钮
       const resetBtn = document.getElementById('reset-btn');
       const pauseBtn = document.getElementById('pause-btn');
+      const leaderboardBtn = document.getElementById('leaderboard-btn');
+      const playerNameInput = document.getElementById('player-name');
+      const submitScoreBtn = document.getElementById('submit-score-btn');
+      const newGameBtn = document.getElementById('new-game-btn');
 
       let isPaused = false;
+      let isCompleted = false;
+      let currentScore = null;
 
       // 重置按钮
       resetBtn.addEventListener('click', () => {
         game.reset();
+        isCompleted = false;
+        currentScore = null;
+        startTime = Date.now();
+        if (!isPaused) {
+          stopTimer();
+          startTimer();
+        }
       });
 
       // 暂停按钮
       pauseBtn.addEventListener('click', () => {
-        if (isPaused) {
-          game.resume();
-          pauseBtn.innerHTML = `
-            <span class="flex items-center justify-center">
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              暂停游戏
-            </span>
-          `;
-          pauseBtn.classList.remove('from-emerald-500', 'to-emerald-600', 'hover:from-emerald-600', 'hover:to-emerald-700');
-          pauseBtn.classList.add('from-slate-500', 'to-slate-600', 'hover:from-slate-600', 'hover:to-slate-700');
-        } else {
-          game.pause();
-          pauseBtn.innerHTML = `
-            <span class="flex items-center justify-center">
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              继续游戏
-            </span>
-          `;
-          pauseBtn.classList.remove('from-slate-500', 'to-slate-600', 'hover:from-slate-600', 'hover:to-slate-700');
-          pauseBtn.classList.add('from-emerald-500', 'to-emerald-600', 'hover:from-emerald-600', 'hover:to-emerald-700');
-        }
         isPaused = !isPaused;
+        if (isPaused) {
+          game.pause();
+          stopTimer();
+          pauseBtn.innerHTML = `
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span data-i18n="resume">${i18n[currentLang].resume}</span>
+          `;
+        } else {
+          game.resume();
+          startTime = Date.now() - (parseInt(document.getElementById('timer').textContent.split(':')[0]) * 60 + parseInt(document.getElementById('timer').textContent.split(':')[1])) * 1000;
+          startTimer();
+          pauseBtn.innerHTML = `
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span data-i18n="pause">${i18n[currentLang].pause}</span>
+          `;
+        }
+        updateLanguage();
       });
 
-  
-      // 成功提示模态框相关
-      const successModal = document.getElementById('success-modal');
-      const successContent = document.getElementById('success-content');
-      const newGameBtn = document.getElementById('new-game-btn');
-      const closeModalBtn = document.getElementById('close-modal-btn');
-      const submitScoreBtn = document.getElementById('submit-score-btn');
-      const playerNameInput = document.getElementById('player-name');
-      const completionTime = document.getElementById('completion-time');
-      const leaderboardPreview = document.getElementById('leaderboard-preview');
-      const recentScores = document.getElementById('recent-scores');
+      // 排行榜按钮
+      leaderboardBtn.addEventListener('click', showLeaderboard);
 
-      let gameStartTime = Date.now();
-      let isCompleted = false;
-      let currentScore = null;
+      // ESC 键关闭模态框
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          hideLeaderboard();
+        }
+      });
 
-      // 监听游戏完成事件
+      // 游戏完成事件
       document.addEventListener('gameCompleted', () => {
         if (!isCompleted) {
           isCompleted = true;
-          const endTime = Date.now();
-          const totalTime = Math.floor((endTime - gameStartTime) / 1000);
-          const minutes = Math.floor(totalTime / 60);
-          const seconds = totalTime % 60;
-          completionTime.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+          stopTimer();
+          const totalTime = Math.floor((Date.now() - startTime) / 1000);
+
+          // 更新完成时间
+          document.getElementById('completion-time').textContent = formatTime(totalTime);
+
+          // 计算排名
+          const scores = getScores();
+          let ranking = 1;
+          for (const score of scores) {
+            if (score.time < totalTime) {
+              ranking++;
+            } else {
+              break;
+            }
+          }
+          document.getElementById('ranking').textContent = ranking <= 10 ? `#${ranking}` : '-';
 
           // 保存当前分数
-          currentScore = {
-            time: totalTime,
-            date: new Date().toISOString()
-          };
+          currentScore = { time: totalTime, date: new Date().toISOString() };
 
           // 显示成功模态框
-          successModal.classList.remove('hidden');
-          // 触发动画
+          const modal = document.getElementById('success-modal');
+          const content = document.getElementById('success-content');
+          modal.classList.remove('hidden');
           setTimeout(() => {
-            successContent.classList.remove('scale-95', 'opacity-0');
-            successContent.classList.add('scale-100', 'opacity-100');
-            // 聚焦到输入框
+            content.classList.remove('scale-95', 'opacity-0');
+            content.classList.add('scale-100', 'opacity-100');
             playerNameInput.focus();
           }, 10);
+
+          updateLanguage();
         }
       });
 
-      // 分数管理功能
-      function getScores() {
-        const scores = localStorage.getItem('brainBoxScores');
-        return scores ? JSON.parse(scores) : [];
-      }
-
-      function saveScore(name, time) {
-        const scores = getScores();
-        const newScore = {
-          name: name || '匿名玩家',
-          time: time,
-          date: new Date().toISOString()
-        };
-        scores.push(newScore);
-        scores.sort((a, b) => a.time - b.time); // 按时间升序排序
-        localStorage.setItem('brainBoxScores', JSON.stringify(scores.slice(0, 10))); // 只保留前10名
-        return scores;
-      }
-
-      function formatTime(seconds) {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-      }
-
-      function updateLeaderboard() {
-        const scores = getScores();
-        recentScores.innerHTML = scores.slice(0, 3).map((score, index) => `
-          <div class="flex items-center justify-between py-1 px-2 rounded ${index === 0 ? 'bg-amber-100' : 'bg-white'}">
-            <span class="text-sm font-medium text-slate-700">
-              ${index + 1}. ${score.name}
-            </span>
-            <span class="text-sm text-slate-600">${formatTime(score.time)}</span>
-          </div>
-        `).join('');
-        leaderboardPreview.classList.remove('hidden');
-      }
-
-      // 监听游戏重置事件
-      const originalReset = game.reset.bind(game);
-      game.reset = function() {
-        originalReset();
-        isCompleted = false;
-        gameStartTime = Date.now();
-        currentScore = null;
-        playerNameInput.value = '';
-        hideSuccessModal();
-      };
-
-      // 隐藏成功模态框
-      function hideSuccessModal() {
-        successContent.classList.remove('scale-100', 'opacity-100');
-        successContent.classList.add('scale-95', 'opacity-0');
-        setTimeout(() => {
-          successModal.classList.add('hidden');
-        }, 300);
-      }
-
-      // 提交记录按钮
+      // 提交分数
       submitScoreBtn.addEventListener('click', () => {
         const playerName = playerNameInput.value.trim();
         if (!currentScore) return;
@@ -411,25 +597,29 @@
         // 保存分数
         const scores = saveScore(playerName, currentScore.time);
 
-        // 更新排行榜显示
-        updateLeaderboard();
+        // 更新显示
+        updateTopScores();
+        updateBestTime();
 
-        // 禁用提交按钮和输入框
+        // 更新提交按钮状态
         submitScoreBtn.disabled = true;
         submitScoreBtn.classList.add('opacity-50', 'cursor-not-allowed');
         submitScoreBtn.innerHTML = `
-          <span class="flex items-center justify-center">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            已提交
-          </span>
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          <span data-i18n="submitted">已提交</span>
         `;
         playerNameInput.disabled = true;
         playerNameInput.classList.add('bg-slate-50');
+
+        // 3秒后自动关闭
+        setTimeout(() => {
+          hideSuccessModal();
+        }, 3000);
       });
 
-      // 回车键提交
+      // 回车提交
       playerNameInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !submitScoreBtn.disabled) {
           submitScoreBtn.click();
@@ -440,25 +630,33 @@
       newGameBtn.addEventListener('click', () => {
         hideSuccessModal();
         game.reset();
-        gameStartTime = Date.now();
+        isCompleted = false;
+        currentScore = null;
+        playerNameInput.value = '';
+        playerNameInput.disabled = false;
+        playerNameInput.classList.remove('bg-slate-50');
+        submitScoreBtn.disabled = false;
+        submitScoreBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        submitScoreBtn.innerHTML = `
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span data-i18n="submitScore">${i18n[currentLang].submitScore}</span>
+        `;
+        startTime = Date.now();
+        startTimer();
       });
 
-      // 关闭按钮
-      closeModalBtn.addEventListener('click', hideSuccessModal);
-
-      // 点击背景关闭
-      successModal.addEventListener('click', (e) => {
-        if (e.target === successModal) {
-          hideSuccessModal();
-        }
-      });
-
-      // ESC 键关闭
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !successModal.classList.contains('hidden')) {
-          hideSuccessModal();
-        }
-      });
+      // 隐藏成功模态框
+      window.hideSuccessModal = function() {
+        const modal = document.getElementById('success-modal');
+        const content = document.getElementById('success-content');
+        content.classList.remove('scale-100', 'opacity-100');
+        content.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+          modal.classList.add('hidden');
+        }, 300);
+      };
 
       console.log('游戏已初始化');
     });
