@@ -1,4 +1,4 @@
-import { GAME_CONFIG, BLOCK_SHAPES } from '../config/gameConfig.js';
+import { GAME_CONFIG, BLOCK_SHAPES, RANDOM_BLOCK_SHAPES } from '../config/gameConfig.js';
 import { Grid } from './Grid.js';
 import { Block } from './Block.js';
 import { Physics } from './Physics.js';
@@ -82,8 +82,22 @@ export class Game {
    * 创建积木
    */
   createBlocks() {
-    for (let i = 0; i < BLOCK_SHAPES.length; i++) {
-      const shapeConfig = BLOCK_SHAPES[i];
+    // 复制 BLOCK_SHAPES
+    const allShapes = [...BLOCK_SHAPES];
+
+    // 从 RANDOM_BLOCK_SHAPES 中随机选择两个
+    const shuffledRandom = [...RANDOM_BLOCK_SHAPES].sort(() => 0.5 - Math.random());
+    const randomBlocks = shuffledRandom.slice(0, 2);
+
+    // 将随机积木添加到列表中
+    allShapes.push(...randomBlocks);
+
+    // 打乱整个列表
+    const finalShapes = allShapes.sort(() => 0.5 - Math.random());
+
+    // 创建所有积木
+    for (let i = 0; i < finalShapes.length; i++) {
+      const shapeConfig = finalShapes[i];
       const block = new Block(
         shapeConfig.shape,
         shapeConfig.color,

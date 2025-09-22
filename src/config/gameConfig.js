@@ -40,9 +40,9 @@ export const GAME_CONFIG = {
   }
 };
 
-// 积木形状和颜色配置
-export const BLOCK_SHAPES = [
-  {
+
+export const RANDOM_BLOCK_SHAPES = [
+    {
     shape: [
       [1, 0, 0],
       [1, 0, 0],
@@ -54,6 +54,34 @@ export const BLOCK_SHAPES = [
       stroke: '#572765'
     }
   },
+  {
+    shape: [
+      [1, 0, 0],
+      [1, 1, 0],
+      [0, 1, 0],
+      [0, 0, 0],
+    ],
+    color: {
+      fill: '#85381c',
+      stroke: '#85381c'
+    }
+  },
+  {
+    shape: [
+      [1, 0, 0],
+      [1, 0, 0],
+      [1, 1, 0],
+      [0, 0, 0],
+    ],
+    color: {
+      fill: '#fe200c',
+      stroke: '#fe200c'
+    }
+  }
+]
+
+// 积木形状和颜色配置
+export const BLOCK_SHAPES = [
   {
     shape: [
       [1, 0, 0],
@@ -116,18 +144,6 @@ export const BLOCK_SHAPES = [
   },
   {
     shape: [
-      [1, 0, 0],
-      [1, 1, 0],
-      [0, 1, 0],
-      [0, 0, 0],
-    ],
-    color: {
-      fill: '#85381c',
-      stroke: '#85381c'
-    }
-  },
-  {
-    shape: [
       [0, 0, 0],
       [0, 1, 1],
       [0, 0, 1],
@@ -136,18 +152,6 @@ export const BLOCK_SHAPES = [
     color: {
       fill: '#dbb301',
       stroke: '#dbb301'
-    }
-  },
-  {
-    shape: [
-      [1, 0, 0],
-      [1, 0, 0],
-      [1, 1, 0],
-      [0, 0, 0],
-    ],
-    color: {
-      fill: '#fe200c',
-      stroke: '#fe200c'
     }
   },
   {
