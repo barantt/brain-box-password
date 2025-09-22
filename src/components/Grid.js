@@ -29,7 +29,7 @@ export class Grid {
     const background = new Konva.Rect({
       width: GAME_CONFIG.width / 2,
       height: GAME_CONFIG.height,
-      fill: 'yellow',
+      fill: '#817863',
       stroke: 'black',
       strokeWidth: 1,
     });
@@ -86,7 +86,7 @@ export class Grid {
         x - GAME_CONFIG.halfBlockSize, y
       ],
       fill: 'white',
-      stroke: 'black',
+      stroke: 'grey',
       strokeWidth: 1,
       closed: true,
     });
