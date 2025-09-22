@@ -40,7 +40,7 @@ export const GAME_CONFIG = {
   }
 };
 
-// L形积木形状和颜色配置
+// 积木形状和颜色配置
 export const BLOCK_SHAPES = [
   {
     shape: [

@@ -117,14 +117,6 @@ export class Game {
       group.on('click', () => {
         this.inputHandler.selectBlock(block);
       });
-
-      // 覆盖双击事件
-      group.off('dblclick');
-      group.on('dblclick', () => {
-        block.reset();
-        this.isCompleted = false;
-        this.ui.hideCompletionMessage();
-      });
     });
   }
 
