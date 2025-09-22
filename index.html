@@ -368,23 +368,62 @@
       });
     });
 
-    // 分数管理
-    function getScores() {
-      const scores = localStorage.getItem('brainBoxScores');
-      return scores ? JSON.parse(scores) : [];
+    // 分数管理 - 使用服务器 API
+    const API_BASE_URL = 'http://localhost:3000/api';
+
+    async function getScores() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/scores`);
+        const data = await response.json();
+        return data.scores || [];
+      } catch (error) {
+        console.error('Failed to fetch scores from server:', error);
+        // 降级到 localStorage
+        const localScores = localStorage.getItem('brainBoxScores');
+        return localScores ? JSON.parse(localScores) : [];
+      }
     }
 
-    function saveScore(name, time) {
-      const scores = getScores();
-      const newScore = {
-        name: name || i18n[currentLang].anonymous || 'Anonymous',
-        time: time,
-        date: new Date().toISOString()
-      };
-      scores.push(newScore);
-      scores.sort((a, b) => a.time - b.time);
-      localStorage.setItem('brainBoxScores', JSON.stringify(scores.slice(0, 50)));
-      return scores;
+    async function saveScore(name, time) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/scores`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: name || i18n[currentLang].anonymous || 'Anonymous',
+            time: time,
+            date: new Date().toISOString()
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          // 同时保存到 localStorage 作为备份
+          const scores = await getScores();
+          const newScore = data.score;
+          scores.push(newScore);
+          scores.sort((a, b) => a.time - b.time);
+          localStorage.setItem('brainBoxScores', JSON.stringify(scores.slice(0, 50)));
+          return scores;
+        } else {
+          throw new Error('Failed to save score to server');
+        }
+      } catch (error) {
+        console.error('Failed to save score to server:', error);
+        // 降级到 localStorage
+        const scores = await getScores();
+        const newScore = {
+          name: name || i18n[currentLang].anonymous || 'Anonymous',
+          time: time,
+          date: new Date().toISOString()
+        };
+        scores.push(newScore);
+        scores.sort((a, b) => a.time - b.time);
+        localStorage.setItem('brainBoxScores', JSON.stringify(scores.slice(0, 50)));
+        return scores;
+      }
     }
 
     function formatTime(seconds) {
@@ -398,33 +437,41 @@
       return `${date.getMonth() + 1}/${date.getDate()}`;
     }
 
-    function updateTopScores() {
-      const scores = getScores().slice(0, 3);
-      const topScoresEl = document.getElementById('top-scores');
+    async function updateTopScores() {
+      try {
+        const scores = (await getScores()).slice(0, 3);
+        const topScoresEl = document.getElementById('top-scores');
 
-      if (scores.length === 0) {
-        topScoresEl.innerHTML = `<p class="text-sm text-slate-500 text-center py-4" data-i18n="noRecords">${i18n[currentLang].noRecords}</p>`;
-        return;
-      }
+        if (scores.length === 0) {
+          topScoresEl.innerHTML = `<p class="text-sm text-slate-500 text-center py-4" data-i18n="noRecords">${i18n[currentLang].noRecords}</p>`;
+          return;
+        }
 
-      topScoresEl.innerHTML = scores.map((score, index) => `
-        <div class="flex items-center justify-between py-2 px-3 rounded-lg ${index === 0 ? 'bg-amber-50 border border-amber-200' : 'bg-slate-50'}">
-          <div class="flex items-center">
-            <span class="text-lg font-bold ${index === 0 ? 'text-amber-600' : 'text-slate-600'} mr-3">#${index + 1}</span>
-            <span class="font-medium text-slate-800">${score.name}</span>
+        topScoresEl.innerHTML = scores.map((score, index) => `
+          <div class="flex items-center justify-between py-2 px-3 rounded-lg ${index === 0 ? 'bg-amber-50 border border-amber-200' : 'bg-slate-50'}">
+            <div class="flex items-center">
+              <span class="text-lg font-bold ${index === 0 ? 'text-amber-600' : 'text-slate-600'} mr-3">#${index + 1}</span>
+              <span class="font-medium text-slate-800">${score.name}</span>
+            </div>
+            <span class="text-sm font-semibold text-slate-600">${formatTime(score.time)}</span>
           </div>
-          <span class="text-sm font-semibold text-slate-600">${formatTime(score.time)}</span>
-        </div>
-      `).join('');
+        `).join('');
+      } catch (error) {
+        console.error('Error updating top scores:', error);
+      }
     }
 
-    function updateBestTime() {
-      const scores = getScores();
-      const bestTimeEl = document.getElementById('best-time');
-      if (scores.length > 0) {
-        bestTimeEl.textContent = formatTime(scores[0].time);
-      } else {
-        bestTimeEl.textContent = '--:--';
+    async function updateBestTime() {
+      try {
+        const scores = await getScores();
+        const bestTimeEl = document.getElementById('best-time');
+        if (scores.length > 0) {
+          bestTimeEl.textContent = formatTime(scores[0].time);
+        } else {
+          bestTimeEl.textContent = '--:--';
+        }
+      } catch (error) {
+        console.error('Error updating best time:', error);
       }
     }
 
@@ -485,8 +532,15 @@
 
       // 初始化界面
       updateLanguage();
-      updateTopScores();
-      updateBestTime();
+      // 异步更新分数显示
+      (async () => {
+        try {
+          await updateTopScores();
+          await updateBestTime();
+        } catch (error) {
+          console.error('Failed to initialize scores:', error);
+        }
+      })();
       startTimer();
 
       // 绑定按钮
@@ -551,7 +605,7 @@
       });
 
       // 游戏完成事件
-      document.addEventListener('gameCompleted', () => {
+      document.addEventListener('gameCompleted', async () => {
         if (!isCompleted) {
           isCompleted = true;
           stopTimer();
@@ -561,16 +615,21 @@
           document.getElementById('completion-time').textContent = formatTime(totalTime);
 
           // 计算排名
-          const scores = getScores();
-          let ranking = 1;
-          for (const score of scores) {
-            if (score.time < totalTime) {
-              ranking++;
-            } else {
-              break;
+          try {
+            const scores = await getScores();
+            let ranking = 1;
+            for (const score of scores) {
+              if (score.time < totalTime) {
+                ranking++;
+              } else {
+                break;
+              }
             }
+            document.getElementById('ranking').textContent = ranking <= 10 ? `#${ranking}` : '-';
+          } catch (error) {
+            console.error('Error calculating ranking:', error);
+            document.getElementById('ranking').textContent = '-';
           }
-          document.getElementById('ranking').textContent = ranking <= 10 ? `#${ranking}` : '-';
 
           // 保存当前分数
           currentScore = { time: totalTime, date: new Date().toISOString() };
@@ -590,33 +649,58 @@
       });
 
       // 提交分数
-      submitScoreBtn.addEventListener('click', () => {
+      submitScoreBtn.addEventListener('click', async () => {
         const playerName = playerNameInput.value.trim();
         if (!currentScore) return;
 
-        // 保存分数
-        const scores = saveScore(playerName, currentScore.time);
-
-        // 更新显示
-        updateTopScores();
-        updateBestTime();
-
-        // 更新提交按钮状态
+        // 禁用按钮防止重复提交
         submitScoreBtn.disabled = true;
         submitScoreBtn.classList.add('opacity-50', 'cursor-not-allowed');
         submitScoreBtn.innerHTML = `
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          <svg class="w-5 h-5 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          <span data-i18n="submitted">已提交</span>
+          <span data-i18n="submitting">提交中...</span>
         `;
-        playerNameInput.disabled = true;
-        playerNameInput.classList.add('bg-slate-50');
 
-        // 3秒后自动关闭
-        setTimeout(() => {
-          hideSuccessModal();
-        }, 3000);
+        try {
+          // 保存分数
+          const scores = await saveScore(playerName, currentScore.time);
+
+          // 更新显示
+          await updateTopScores();
+          await updateBestTime();
+
+          // 更新提交按钮状态
+          submitScoreBtn.innerHTML = `
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span data-i18n="submitted">已提交</span>
+          `;
+          playerNameInput.disabled = true;
+          playerNameInput.classList.add('bg-slate-50');
+
+          // 3秒后自动关闭
+          setTimeout(() => {
+            hideSuccessModal();
+          }, 3000);
+        } catch (error) {
+          console.error('Failed to submit score:', error);
+
+          // 恢复按钮状态
+          submitScoreBtn.disabled = false;
+          submitScoreBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+          submitScoreBtn.innerHTML = `
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            <span data-i18n="submit">提交</span>
+          `;
+
+          // 显示错误提示
+          alert('提交失败，请重试');
+        }
       });
 
       // 回车提交
