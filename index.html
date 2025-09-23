@@ -6,6 +6,7 @@
   <title>菱形棋盘拼图游戏</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/konva@9/konva.min.js"></script>
+  <script src="./config.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -369,18 +370,26 @@
     });
 
     // 分数管理 - 使用服务器 API
-    const API_BASE_URL = 'http://localhost:3000/api';
+    const API_BASE_URL = window.APP_CONFIG?.API_BASE_URL || 'http://localhost:3000/api';
 
     async function getScores() {
       try {
         const response = await fetch(`${API_BASE_URL}/scores`);
         const data = await response.json();
-        return data.scores || [];
+        // 确保 data.scores 是数组
+        const scores = Array.isArray(data.scores) ? data.scores : [];
+        return scores;
       } catch (error) {
         console.error('Failed to fetch scores from server:', error);
         // 降级到 localStorage
         const localScores = localStorage.getItem('brainBoxScores');
-        return localScores ? JSON.parse(localScores) : [];
+        try {
+          const parsedScores = localScores ? JSON.parse(localScores) : [];
+          return Array.isArray(parsedScores) ? parsedScores : [];
+        } catch (parseError) {
+          console.error('Failed to parse local scores:', parseError);
+          return [];
+        }
       }
     }
 
@@ -426,10 +435,11 @@
       }
     }
 
-    function formatTime(seconds) {
-      const mins = Math.floor(seconds / 60);
-      const secs = seconds % 60;
-      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    function formatTime(totalMs) {
+      const mins = Math.floor(totalMs / 60000);
+      const secs = Math.floor((totalMs % 60000) / 1000);
+      const ms = Math.floor((totalMs % 1000) / 10); // 显示到百分之一秒
+      return `${mins}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
     }
 
     function formatDate(dateStr) {
@@ -476,10 +486,10 @@
     }
 
     // 排行榜功能
-    window.showLeaderboard = function() {
+    window.showLeaderboard = async function() {
       const modal = document.getElementById('leaderboard-modal');
       const list = document.getElementById('leaderboard-list');
-      const scores = getScores();
+      const scores = await getScores();
 
       if (scores.length === 0) {
         list.innerHTML = `<p class="text-center py-8 text-slate-500" data-i18n="noRecords">${i18n[currentLang].noRecords}</p>`;
@@ -511,9 +521,9 @@
     function startTimer() {
       startTime = Date.now();
       timerInterval = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const elapsed = Date.now() - startTime;
         document.getElementById('timer').textContent = formatTime(elapsed);
-      }, 100);
+      }, 10); // 更新频率提高到10ms，更精确
     }
 
     function stopTimer() {
@@ -582,7 +592,13 @@
           `;
         } else {
           game.resume();
-          startTime = Date.now() - (parseInt(document.getElementById('timer').textContent.split(':')[0]) * 60 + parseInt(document.getElementById('timer').textContent.split(':')[1])) * 1000;
+          // 解析当前显示的时间，恢复到毫秒精度
+          const timeParts = document.getElementById('timer').textContent.split(':');
+          const mins = parseInt(timeParts[0]);
+          const secParts = timeParts[1].split('.');
+          const secs = parseInt(secParts[0]);
+          const ms = secParts[1] ? parseInt(secParts[1]) * 10 : 0; // 百分秒转换为毫秒
+          startTime = Date.now() - (mins * 60000 + secs * 1000 + ms);
           startTimer();
           pauseBtn.innerHTML = `
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -609,7 +625,7 @@
         if (!isCompleted) {
           isCompleted = true;
           stopTimer();
-          const totalTime = Math.floor((Date.now() - startTime) / 1000);
+          const totalTime = Date.now() - startTime;
 
           // 更新完成时间
           document.getElementById('completion-time').textContent = formatTime(totalTime);
@@ -631,7 +647,7 @@
             document.getElementById('ranking').textContent = '-';
           }
 
-          // 保存当前分数
+          // 保存当前分数（毫秒精度）
           currentScore = { time: totalTime, date: new Date().toISOString() };
 
           // 显示成功模态框

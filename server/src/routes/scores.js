@@ -29,10 +29,6 @@ router.post('/', async (req, res) => {
       score: time,
       value: JSON.stringify(score)
     });
-
-    // Keep only top 50 scores
-    await client.zRemRangeByRank('game:scores', 50, -1);
-
     res.status(201).json({
       message: 'Score saved successfully',
       score
@@ -52,9 +48,7 @@ router.get('/', async (req, res) => {
     const client = redis.getClient();
 
     // Get scores from lowest time to highest
-    const scores = await client.zRange('game:scores', 0, limit - 1, {
-      BY: 'SCORE'
-    });
+    const scores = await client.zRange('game:scores', 0, - 1);
 
     // Parse JSON strings
     const parsedScores = scores.map(scoreStr => {
