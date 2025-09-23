@@ -185,6 +185,23 @@ export class Block {
    * @param {string} direction - 'horizontal' 或 'vertical'
    */
   flip(direction) {
+    const blockSize = Math.hypot(GAME_CONFIG.halfBlockSize, GAME_CONFIG.halfBlockSize);
+
+    // 计算中心方块的世界坐标
+    const centerBlockRow = this.centerBlock[0];
+    const centerBlockCol = this.centerBlock[1];
+
+    // 中心方块在积木组中的本地坐标
+    const centerLocalX = centerBlockCol * blockSize + blockSize / 2;
+    const centerLocalY = centerBlockRow * blockSize + blockSize / 2;
+
+    // 计算当前中心点的世界坐标
+    const currentTransform = this.group.getTransform();
+    const currentCenterWorld = currentTransform.point({
+      x: centerLocalX,
+      y: centerLocalY
+    });
+
     if (direction === 'horizontal') {
       this.group.physics.isFlippedX = !this.group.physics.isFlippedX;
       const scaleX = this.group.physics.isFlippedX ? -1 : 1;
@@ -194,6 +211,21 @@ export class Block {
       const scaleY = this.group.physics.isFlippedY ? -1 : 1;
       this.group.scaleY(scaleY);
     }
+
+    // 计算翻转后中心点的世界坐标
+    const newTransform = this.group.getTransform();
+    const newCenterWorld = newTransform.point({
+      x: centerLocalX,
+      y: centerLocalY
+    });
+
+    // 计算偏移量，使中心点回到原来的位置
+    const offsetX = currentCenterWorld.x - newCenterWorld.x;
+    const offsetY = currentCenterWorld.y - newCenterWorld.y;
+
+    // 调整积木组位置
+    this.group.x(this.group.x() + offsetX);
+    this.group.y(this.group.y() + offsetY);
 
     // 翻转后进行边界检测
     this.constrainToBounds();
