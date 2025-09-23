@@ -31,7 +31,11 @@ export class Block {
       x: x,
       y: y,
       draggable: true,
-      rotation: 45
+      rotation: 45,
+      offset: {
+        x: 0,
+        y: 0
+      }
     });
 
     // 添加物理属性
@@ -94,6 +98,11 @@ export class Block {
       this.group.opacity(0.9);
     });
 
+    // 拖拽移动 - 添加边界检测
+    this.group.on('dragmove', () => {
+      this.constrainToBounds();
+    });
+
     // 拖拽结束
     this.group.on('dragend', () => {
       this.group.physics.isDragging = false;
@@ -136,10 +145,21 @@ export class Block {
     const x = config.startX + col * config.horizontalSpacing;
     const y = config.startY + row * config.verticalSpacing;
 
+    // 设置位置和状态
     this.group.x(x);
     this.group.y(y);
+    this.group.rotation(45);
+    this.group.scaleX(1);
+    this.group.scaleY(1);
+
+    // 重置物理状态
     this.group.physics.velocityY = 0;
     this.group.physics.isGrounded = false;
+    this.group.physics.isDragging = false;
+    this.group.physics.isSelected = false;
+    this.group.physics.isFlippedX = false;
+    this.group.physics.isFlippedY = false;
+
     this.deselect();
   }
 
@@ -157,6 +177,9 @@ export class Block {
       const scaleY = this.group.physics.isFlippedY ? -1 : 1;
       this.group.scaleY(scaleY);
     }
+
+    // 翻转后进行边界检测
+    this.constrainToBounds();
   }
 
   /**
@@ -177,6 +200,10 @@ export class Block {
     if (newRotation < 0) newRotation += 360;
 
     this.group.rotation(newRotation);
+
+    // 旋转后进行边界检测
+    this.constrainToBounds();
+
     this.layer.draw();
   }
 
@@ -273,6 +300,9 @@ export class Block {
       this.group.physics.isGrounded = true;
       this.group.physics.velocityY = 0;
 
+      // 网格吸附后进行边界检测
+      this.constrainToBounds();
+
       return true;
     }
 
@@ -301,6 +331,39 @@ export class Block {
   applyPhysics() {
     // 重力系统已禁用，积木保持静止
     return;
+  }
+
+  /**
+   * 边界检测 - 限制积木在可视区域内
+   */
+  constrainToBounds() {
+    const group = this.group;
+    const box = group.getClientRect();
+
+    // 获取画布边界 - 暂时放宽限制进行测试
+    const minX = -50;  // 允许积木超出左侧边界
+    const minY = 20;
+    const maxX = GAME_CONFIG.width - box.width + 50;  // 右侧也放宽
+    const maxY = GAME_CONFIG.height - box.height - 20;
+
+    // 获取当前位置
+    let x = group.x();
+    let y = group.y();
+
+    // 检查是否真的超出边界
+    const needsClamping = x < minX || x > maxX || y < minY || y > maxY;
+
+    if (!needsClamping) {
+      return; // 没有超出边界，不需要调整
+    }
+
+    // 限制在边界内
+    x = Math.max(minX, Math.min(maxX, x));
+    y = Math.max(minY, Math.min(maxY, y));
+
+    // 更新位置
+    group.x(x);
+    group.y(y);
   }
 
   /**

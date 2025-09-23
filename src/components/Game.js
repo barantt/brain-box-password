@@ -144,13 +144,9 @@ export class Game {
     // 重置网格
     this.grid.reset();
 
-    // 重置所有积木
+    // 重置所有积木（让每个积木自己处理重置逻辑）
     this.blocks.forEach((block, index) => {
       block.reset();
-      const group = block.getGroup();
-      group.x(GAME_CONFIG.blocks.startX);
-      group.y(GAME_CONFIG.blocks.startY + index * GAME_CONFIG.blocks.spacing);
-      group.rotation(45);
     });
 
     // 重置物理状态
