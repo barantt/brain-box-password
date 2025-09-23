@@ -49,7 +49,7 @@ export const RANDOM_BLOCK_SHAPES = [
     {
     shape: [
       [1, 0, 0],
-      [1, 0, 0],
+      [2, 0, 0],
       [1, 0, 0],
       [1, 0, 0]
     ],
@@ -61,7 +61,7 @@ export const RANDOM_BLOCK_SHAPES = [
   {
     shape: [
       [1, 0, 0],
-      [1, 1, 0],
+      [1, 2, 0],
       [0, 1, 0],
       [0, 0, 0],
     ],
@@ -74,7 +74,7 @@ export const RANDOM_BLOCK_SHAPES = [
     shape: [
       [1, 0, 0],
       [1, 0, 0],
-      [1, 1, 0],
+      [2, 1, 0],
       [0, 0, 0],
     ],
     color: {
@@ -90,8 +90,8 @@ export const BLOCK_SHAPES = [
     shape: [
       [1, 0, 0],
       [1, 0, 0],
-      [1, 0, 0],
-      [1, 1, 0],
+      [2, 1, 0],
+      [1, 0, 0]
     ],
     color: {
       fill: '#193376',
@@ -102,7 +102,7 @@ export const BLOCK_SHAPES = [
     shape: [
       [1, 0, 0],
       [1, 1, 0],
-      [1, 1, 0],
+      [2, 1, 0],
       [0, 0, 0],
     ],
     color: {
@@ -113,7 +113,7 @@ export const BLOCK_SHAPES = [
   {
     shape: [
       [1, 0, 0],
-      [1, 1, 0],
+      [1, 2, 0],
       [0, 1, 0],
       [0, 1, 0],
     ],
@@ -126,7 +126,7 @@ export const BLOCK_SHAPES = [
     shape: [
       [0, 0, 0],
       [0, 0, 1],
-      [0, 1, 1],
+      [0, 2, 1],
       [1, 1, 0],
     ],
     color: {
@@ -136,7 +136,7 @@ export const BLOCK_SHAPES = [
   },
   {
     shape: [
-      [1, 1, 1],
+      [1, 1, 2],
       [0, 0, 1],
       [0, 0, 1],
       [0, 0, 0],
@@ -150,7 +150,7 @@ export const BLOCK_SHAPES = [
     shape: [
       [0, 0, 0],
       [0, 1, 1],
-      [0, 0, 1],
+      [0, 0, 2],
       [0, 1, 1],
     ],
     color: {
@@ -162,7 +162,7 @@ export const BLOCK_SHAPES = [
     shape: [
       [1, 0, 0],
       [1, 0, 0],
-      [1, 1, 0],
+      [2, 1, 0],
       [1, 0, 0],
     ],
     color: {
@@ -173,7 +173,7 @@ export const BLOCK_SHAPES = [
   {
     shape: [
       [1, 0, 0],
-      [1, 1, 0],
+      [2, 1, 0],
       [1, 0, 0],
       [0, 0, 0],
     ],
@@ -185,7 +185,7 @@ export const BLOCK_SHAPES = [
   {
     shape: [
       [1, 0, 0],
-      [1, 1, 0],
+      [2, 1, 0],
       [0, 0, 0],
       [0, 0, 0],
     ],

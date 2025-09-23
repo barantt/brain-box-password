@@ -99,7 +99,7 @@ export class Game {
     for (let i = 0; i < finalShapes.length; i++) {
       const shapeConfig = finalShapes[i];
       const block = new Block(
-        shapeConfig.shape,
+        shapeConfig,
         shapeConfig.color,
         i,
         this.blocksGroup,

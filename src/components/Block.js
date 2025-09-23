@@ -3,15 +3,32 @@ import { getGridKey, getDistance } from '../utils/helpers.js';
 
 export class Block {
   constructor(shapeData, color, index, layer, grid) {
-    this.shapeData = shapeData;
+    this.shapeData = shapeData.shape;
     this.color = color;
     this.index = index;
     this.layer = layer;
     this.grid = grid;
+    this.centerBlock = this.findCenterBlock();
     this.group = null;
     this.blocks = [];
 
     this.init();
+  }
+
+  /**
+   * 查找中心方块
+   * @returns {Array} [row, col] 中心方块的坐标
+   */
+  findCenterBlock() {
+    for (let row = 0; row < this.shapeData.length; row++) {
+      for (let col = 0; col < this.shapeData[row].length; col++) {
+        if (this.shapeData[row][col] === 2) {
+          return [row, col];
+        }
+      }
+    }
+    // 如果没有找到中心点（向后兼容），默认为 [1, 1]
+    return [1, 1];
   }
 
   /**
@@ -65,7 +82,7 @@ export class Block {
 
     for (let row = 0; row < 4; row++) {
       for (let col = 0; col < 3; col++) {
-        if (this.shapeData[row] && this.shapeData[row][col] === 1) {
+        if (this.shapeData[row] && this.shapeData[row][col] > 0) {
           const block = new Konva.Rect({
             x: col * blockSize,
             y: row * blockSize,
@@ -187,19 +204,48 @@ export class Block {
    * @param {number} angle - 旋转角度（正值顺时针，负值逆时针）
    */
   rotate(angle) {
-    const currentRotation = this.group.rotation();
-    // 标准化当前角度到 0-360 范围
-    let normalizedRotation = currentRotation % 360;
-    if (normalizedRotation < 0) normalizedRotation += 360;
+    const blockSize = Math.hypot(GAME_CONFIG.halfBlockSize, GAME_CONFIG.halfBlockSize);
+
+    // 计算中心方块的世界坐标
+    const centerBlockRow = this.centerBlock[0];
+    const centerBlockCol = this.centerBlock[1];
+
+    // 中心方块在积木组中的本地坐标
+    const centerLocalX = centerBlockCol * blockSize + blockSize / 2;
+    const centerLocalY = centerBlockRow * blockSize + blockSize / 2;
+
+    // 计算当前旋转后的中心点世界坐标
+    const currentTransform = this.group.getTransform();
+    const currentCenterWorld = currentTransform.point({
+      x: centerLocalX,
+      y: centerLocalY
+    });
 
     // 计算新的旋转角度
-    let newRotation = normalizedRotation + angle;
+    const currentRotation = this.group.rotation();
+    let newRotation = currentRotation + angle;
 
-    // 标准化新角度
+    // 标准化新角度到 0-360 范围
     newRotation = newRotation % 360;
     if (newRotation < 0) newRotation += 360;
 
+    // 设置新的旋转角度
     this.group.rotation(newRotation);
+
+    // 计算旋转后中心点的世界坐标
+    const newTransform = this.group.getTransform();
+    const newCenterWorld = newTransform.point({
+      x: centerLocalX,
+      y: centerLocalY
+    });
+
+    // 计算偏移量，使中心点回到原来的位置
+    const offsetX = currentCenterWorld.x - newCenterWorld.x;
+    const offsetY = currentCenterWorld.y - newCenterWorld.y;
+
+    // 调整积木组位置
+    this.group.x(this.group.x() + offsetX);
+    this.group.y(this.group.y() + offsetY);
 
     // 旋转后进行边界检测
     this.constrainToBounds();
