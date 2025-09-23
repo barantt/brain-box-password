@@ -1,0 +1,12 @@
+# Cloudflare Worker 配置文件
+name = "brain-box-password-api"
+main = "src/index.js"
+compatibility_date = "2025-09-23"
+
+[[kv_namespaces]]
+binding = "BRAIN_BOX_SCORES"
+id = "YOUR kv_namespaces ID"
+
+# 日志配置
+[observability]
+enabled = true
