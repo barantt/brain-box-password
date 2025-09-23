@@ -18,9 +18,13 @@ export class Block {
    * 初始化积木
    */
   init() {
-    // 计算初始位置
-    const x = GAME_CONFIG.blocks.startX;
-    const y = GAME_CONFIG.blocks.startY + this.index * GAME_CONFIG.blocks.spacing;
+    // 计算网格布局位置
+    const config = GAME_CONFIG.blocks;
+    const row = Math.floor(this.index / config.cols);
+    const col = this.index % config.cols;
+
+    const x = config.startX + col * config.horizontalSpacing;
+    const y = config.startY + row * config.verticalSpacing;
 
     // 创建积木组
     this.group = new Konva.Group({
@@ -123,7 +127,17 @@ export class Block {
    */
   reset() {
     this.grid.releaseGroupGrids(this.group);
-    this.group.y(50);
+
+    // 回到网格布局位置
+    const config = GAME_CONFIG.blocks;
+    const row = Math.floor(this.index / config.cols);
+    const col = this.index % config.cols;
+
+    const x = config.startX + col * config.horizontalSpacing;
+    const y = config.startY + row * config.verticalSpacing;
+
+    this.group.x(x);
+    this.group.y(y);
     this.group.physics.velocityY = 0;
     this.group.physics.isGrounded = false;
     this.deselect();
@@ -282,31 +296,11 @@ export class Block {
   }
 
   /**
-   * 应用物理效果
+   * 应用物理效果 (已禁用重力)
    */
   applyPhysics() {
-    const physics = this.group.physics;
-
-    if (physics.isDragging || physics.isSelected || physics.isGrounded) {
-      return;
-    }
-
-    // 获取底部位置
-    const box = this.group.getClientRect();
-    const bottom = box.y + box.height;
-
-    // 检查是否撞到地面
-    if (bottom >= GAME_CONFIG.physics.groundY) {
-      const delta = GAME_CONFIG.physics.groundY - bottom;
-      this.group.y(this.group.y() + delta);
-      physics.isGrounded = true;
-      physics.velocityY = 0;
-    } else {
-      // 应用重力
-      physics.velocityY += GAME_CONFIG.physics.force;
-      physics.velocityY *= GAME_CONFIG.physics.friction;
-      this.group.y(this.group.y() + physics.velocityY);
-    }
+    // 重力系统已禁用，积木保持静止
+    return;
   }
 
   /**

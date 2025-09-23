@@ -26,9 +26,13 @@ export const GAME_CONFIG = {
   // 积木配置
   blocks: {
     count: 12,
-    spacing: 120,    // 垂直间距
-    startX: 600,     // 起始X位置 (width/2 + 150)
-    startY: 50       // 起始Y位置
+    // 右侧区域均匀布局配置 - 2列6行布局
+    startX: 680,     // 起始X位置 (向左偏移一些)
+    startY: 80,      // 起始Y位置
+    horizontalSpacing: 110, // 水平间距
+    verticalSpacing: 90,    // 垂直间距
+    cols: 2,         // 每行2个积木 (更宽松)
+    rows: 6          // 6行布局
   },
 
   // UI配置

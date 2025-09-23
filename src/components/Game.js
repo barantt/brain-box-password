@@ -71,8 +71,8 @@ export class Game {
     this.layer.add(this.blocksGroup);
     this.stage.add(this.layer);
 
-    // 启动物理引擎
-    this.physics.start();
+    // 物理引擎已禁用
+    // this.physics.start();
 
     // 绑定积木选择事件
     this.bindBlockSelection();
@@ -160,8 +160,8 @@ export class Game {
     this.isCompleted = false;
     this.ui.hideCompletionMessage();
 
-    // 重新启动物理引擎
-    this.physics.start();
+    // 物理引擎已禁用
+    // this.physics.start();
 
     // 重绘
     this.layer.draw();
