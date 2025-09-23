@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is an interactive L-shaped block puzzle game built with vanilla JavaScript and Konva.js. The game features a diamond-shaped grid where players manipulate 12 colored L-shaped blocks to fill the entire board.
+This is "Brain Box Password" (智能方块密码) - an interactive L-shaped block puzzle game built with vanilla JavaScript and Konva.js. The game features a diamond-shaped grid where players manipulate 12 colored L-shaped blocks to fill the entire board.
 
 ## Architecture
 

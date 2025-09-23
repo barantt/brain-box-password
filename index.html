@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>菱形棋盘拼图游戏</title>
+  <title data-i18n="pageTitle">智能方块密码游戏</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/konva@9/konva.min.js"></script>
   <script src="./config.js"></script>
@@ -260,7 +260,8 @@
     // 国际化配置
     const i18n = {
       zh: {
-        gameTitle: '菱形棋盘拼图',
+        pageTitle: '智能方块密码游戏',
+        gameTitle: '智能方块密码',
         leaderboard: '排行榜',
         reset: '重新开始',
         pause: '暂停',
@@ -294,7 +295,8 @@
         loading: '加载中...'
       },
       en: {
-        gameTitle: 'Diamond Block Puzzle',
+        pageTitle: 'Brain Box Password Game',
+        gameTitle: 'Brain Box Password',
         leaderboard: 'Leaderboard',
         reset: 'Reset',
         pause: 'Pause',
@@ -333,6 +335,15 @@
 
     // 更新界面语言
     function updateLanguage() {
+      // 更新页面标题
+      const titleElem = document.querySelector('title[data-i18n]');
+      if (titleElem) {
+        const key = titleElem.getAttribute('data-i18n');
+        if (i18n[currentLang][key]) {
+          titleElem.textContent = i18n[currentLang][key];
+        }
+      }
+
       document.querySelectorAll('[data-i18n]').forEach(elem => {
         const key = elem.getAttribute('data-i18n');
         if (i18n[currentLang][key]) {

@@ -1,4 +1,4 @@
-# Cloudflare Worker 部署指南
+# Brain Box Password - Cloudflare Worker 部署指南
 
 ## 前置条件
 
