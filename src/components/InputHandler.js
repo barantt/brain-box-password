@@ -1,6 +1,7 @@
 export class InputHandler {
   constructor(game) {
     this.game = game;
+    this.selectedBlock = null;
     this.lastClickTime = 0;
     this.lastClickedBlock = null;
     this.rightClickTimer = null;
@@ -16,6 +17,8 @@ export class InputHandler {
   init() {
     // 添加事件监听
     this.addEventListeners();
+    this.addKeyboardListeners();
+    this.addStageListener();
   }
 
   /**
@@ -80,11 +83,94 @@ export class InputHandler {
         this.lastClickedBlock = null;
         this.lastClickTime = 0;
       } else {
-        // 记录单击事件
+        // 左键单击 - 选中积木
+        this.selectBlock(block);
         this.lastClickedBlock = block;
         this.lastClickTime = currentTime;
       }
     }
+  }
+
+  /**
+   * 添加键盘事件监听器
+   */
+  addKeyboardListeners() {
+    // 键盘事件 - 监听整个文档
+    document.addEventListener('keydown', (e) => {
+      this.handleKeyDown(e);
+    });
+  }
+
+  /**
+   * 处理键盘按下事件
+   * @param {KeyboardEvent} e
+   */
+  handleKeyDown(e) {
+    // 只处理方向键且必须有选中的积木
+    if (!this.selectedBlock) return;
+
+    switch(e.key) {
+      case 'ArrowLeft':
+        e.preventDefault();
+        this.selectedBlock.rotate(-90); // 选中积木逆时针旋转90度
+        break;
+      case 'ArrowRight':
+        e.preventDefault();
+        this.selectedBlock.rotate(90); // 选中积木顺时针旋转90度
+        break;
+      case 'ArrowUp':
+      case 'ArrowDown':
+        e.preventDefault();
+        this.selectedBlock.flip('horizontal'); // 选中积木水平翻转
+        break;
+    }
+  }
+
+  /**
+   * 选择积木
+   * @param {Block} block
+   */
+  selectBlock(block) {
+    // 取消之前的选择
+    this.deselectAll();
+
+    // 选择新积木
+    this.selectedBlock = block;
+    block.select();
+    this.game.layer.draw();
+  }
+
+  /**
+   * 取消选择所有积木
+   */
+  deselectAll() {
+    this.game.blocks.forEach(block => {
+      block.deselect();
+    });
+    this.selectedBlock = null;
+    this.game.layer.draw();
+  }
+
+  /**
+   * 获取当前选中的积木
+   * @returns {Block|null}
+   */
+  getSelectedBlock() {
+    return this.selectedBlock;
+  }
+
+  /**
+   * 添加舞台事件监听器
+   */
+  addStageListener() {
+    // 点击舞台空白区域取消选择
+    this.game.stage.on('click', (e) => {
+      // 如果点击的是舞台本身或网格，取消选择
+      if (e.target === this.game.stage ||
+          e.target.getParent() === this.game.grid.group) {
+        this.deselectAll();
+      }
+    });
   }
 
   /**
@@ -110,5 +196,11 @@ export class InputHandler {
       group.off('mousedown');
       group.off('contextmenu');
     });
+
+    // 移除键盘事件监听器
+    document.removeEventListener('keydown', this.handleKeyDown);
+
+    // 移除舞台事件监听器
+    this.game.stage.off('click');
   }
 }

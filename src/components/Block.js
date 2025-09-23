@@ -129,17 +129,31 @@ export class Block {
   }
 
   /**
-   * 选中积木（已弃用）
+   * 选中积木
    */
   select() {
-    // 选择功能已移除，此方法保留以避免错误
+    // 添加选中效果 - 提高透明度和添加边框
+    this.blocks.forEach(block => {
+      block.stroke('white');
+      block.strokeWidth(3);
+      block.shadowColor('black');
+      block.shadowBlur(10);
+      block.shadowOpacity(0.5);
+    });
   }
 
   /**
-   * 取消选中（已弃用）
+   * 取消选中
    */
   deselect() {
-    // 选择功能已移除，此方法保留以避免错误
+    // 移除选中效果
+    this.blocks.forEach(block => {
+      block.stroke(this.color.stroke);
+      block.strokeWidth(1);
+      block.shadowColor(null);
+      block.shadowBlur(0);
+      block.shadowOpacity(0);
+    });
   }
 
   /**
