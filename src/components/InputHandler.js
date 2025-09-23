@@ -13,7 +13,7 @@ export class InputHandler {
   init() {
     // 创建变换器
     this.transformer = new Konva.Transformer({
-      rotationSnaps: [0, 90, 180, 270],
+      rotationSnaps: [45, 135, 225, 315],
       rotationSnapTolerance: 45,
       enabledAnchors: [],
       resizeEnabled: false,
