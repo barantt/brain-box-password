@@ -384,32 +384,64 @@ export class Block {
    */
   constrainToBounds() {
     const group = this.group;
-    const box = group.getClientRect();
 
-    // 获取画布边界 - 暂时放宽限制进行测试
-    const minX = -50;  // 允许积木超出左侧边界
-    const minY = 20;
-    const maxX = GAME_CONFIG.width - box.width + 50;  // 右侧也放宽
-    const maxY = GAME_CONFIG.height - box.height - 20;
+    // 计算所有实际渲染方块的世界坐标边界
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
 
-    // 获取当前位置
-    let x = group.x();
-    let y = group.y();
+    // 遍历所有实际渲染的方块
+    this.blocks.forEach(block => {
+      // 获取方块的四个角的世界坐标
+      const corners = [
+        { x: block.x(), y: block.y() },
+        { x: block.x() + block.width(), y: block.y() },
+        { x: block.x(), y: block.y() + block.height() },
+        { x: block.x() + block.width(), y: block.y() + block.height() }
+      ];
 
-    // 检查是否真的超出边界
-    const needsClamping = x < minX || x > maxX || y < minY || y > maxY;
+      // 转换为世界坐标并更新边界
+      corners.forEach(corner => {
+        const worldPoint = group.getTransform().point(corner);
+        minX = Math.min(minX, worldPoint.x);
+        minY = Math.min(minY, worldPoint.y);
+        maxX = Math.max(maxX, worldPoint.x);
+        maxY = Math.max(maxY, worldPoint.y);
+      });
+    });
 
-    if (!needsClamping) {
-      return; // 没有超出边界，不需要调整
+    // 如果没有找到任何方块，返回
+    if (minX === Infinity) return;
+
+    // 计算积木的实际宽度和高度
+    const actualWidth = maxX - minX;
+    const actualHeight = maxY - minY;
+
+    // 获取画布边界
+    const canvasMinX = 0;  // 允许积木超出左侧边界
+    const canvasMinY = 0;
+    // 获取积木组的当前位置
+    let groupX = group.x();
+    let groupY = group.y();
+
+    // 计算需要调整的偏移量
+    let offsetX = 0, offsetY = 0;
+
+    if (minX < canvasMinX) {
+      offsetX = canvasMinX - minX;
+    } else if (maxX > GAME_CONFIG.width) {
+      offsetX = GAME_CONFIG.width - maxX;
     }
 
-    // 限制在边界内
-    x = Math.max(minX, Math.min(maxX, x));
-    y = Math.max(minY, Math.min(maxY, y));
+    if (minY < canvasMinY) {
+      offsetY = canvasMinY - minY;
+    } else if (maxY > GAME_CONFIG.height) {
+      offsetY = GAME_CONFIG.height - maxY;
+    }
 
-    // 更新位置
-    group.x(x);
-    group.y(y);
+    // 如果需要调整，更新积木组位置
+    if (offsetX !== 0 || offsetY !== 0) {
+      group.x(groupX + offsetX);
+      group.y(groupY + offsetY);
+    }
   }
 
   /**

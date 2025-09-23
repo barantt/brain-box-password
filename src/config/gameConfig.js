@@ -1,7 +1,7 @@
 // 游戏配置参数
 export const GAME_CONFIG = {
   // 画布尺寸
-  width: 900,
+  width: 850,
   height: 700,
 
   // 游戏元素尺寸
