@@ -529,8 +529,13 @@
     let timerInterval = null;
     let startTime = Date.now();
 
-    function startTimer() {
-      startTime = Date.now();
+    function startTimer(resumeFromTime = null) {
+      // 如果提供了恢复时间，使用它
+      if (resumeFromTime !== null) {
+        startTime = resumeFromTime;
+      } else if (!startTime) {
+        startTime = Date.now();
+      }
       timerInterval = setInterval(() => {
         const elapsed = Date.now() - startTime;
         document.getElementById('timer').textContent = formatTime(elapsed);
@@ -584,7 +589,7 @@
         startTime = Date.now();
         if (!isPaused) {
           stopTimer();
-          startTimer();
+          startTimer(null); // 传递null来重置计时器
         }
       });
 
@@ -609,8 +614,8 @@
           const secParts = timeParts[1].split('.');
           const secs = parseInt(secParts[0]);
           const ms = secParts[1] ? parseInt(secParts[1]) * 10 : 0; // 百分秒转换为毫秒
-          startTime = Date.now() - (mins * 60000 + secs * 1000 + ms);
-          startTimer();
+          const resumeTime = Date.now() - (mins * 60000 + secs * 1000 + ms);
+          startTimer(resumeTime);
           pauseBtn.innerHTML = `
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -755,7 +760,7 @@
           <span data-i18n="submitScore">${i18n[currentLang].submitScore}</span>
         `;
         startTime = Date.now();
-        startTimer();
+        startTimer(null); // 重置计时器
       });
 
       // 隐藏成功模态框
