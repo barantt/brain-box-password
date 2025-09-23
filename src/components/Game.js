@@ -74,8 +74,8 @@ export class Game {
     // 物理引擎已禁用
     // this.physics.start();
 
-    // 绑定积木选择事件
-    this.bindBlockSelection();
+    // 绑定积木事件
+    this.bindBlockEvents();
   }
 
   /**
@@ -111,12 +111,10 @@ export class Game {
   }
 
   /**
-   * 绑定积木选择事件
+   * 绑定积木事件
    */
-  bindBlockSelection() {
+  bindBlockEvents() {
     this.blocks.forEach(block => {
-      const group = block.getGroup();
-
       // 设置拖拽结束回调
       block.onDragEnd = (snapped) => {
         // 如果成功吸附，检查是否完成
@@ -125,12 +123,6 @@ export class Game {
           this.ui.showCompletionMessage();
         }
       };
-
-      // 覆盖点击事件
-      group.off('click');
-      group.on('click', () => {
-        this.inputHandler.selectBlock(block);
-      });
     });
   }
 
@@ -161,6 +153,9 @@ export class Game {
 
     // 重绘
     this.layer.draw();
+
+    // 重新绑定输入事件
+    this.inputHandler.rebindEvents();
   }
 
   /**

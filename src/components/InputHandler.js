@@ -1,8 +1,11 @@
 export class InputHandler {
   constructor(game) {
     this.game = game;
-    this.transformer = null;
-    this.selectedBlock = null;
+    this.lastClickTime = 0;
+    this.lastClickedBlock = null;
+    this.rightClickTimer = null;
+    this.doubleClickDelay = 300; // 双击判定时间（毫秒）
+    this.rightClickDelay = 250; // 右键单击判定时间（毫秒）
 
     this.init();
   }
@@ -11,18 +14,6 @@ export class InputHandler {
    * 初始化输入处理器
    */
   init() {
-    // 创建变换器
-    this.transformer = new Konva.Transformer({
-      rotationSnaps: [45, 135, 225, 315],
-      rotationSnapTolerance: 45,
-      enabledAnchors: [],
-      resizeEnabled: false,
-      borderEnabled: false,
-    });
-
-    // 添加到游戏层
-    this.game.layer.add(this.transformer);
-
     // 添加事件监听
     this.addEventListeners();
   }
@@ -31,103 +22,93 @@ export class InputHandler {
    * 添加事件监听器
    */
   addEventListeners() {
-    // 舞台点击事件
-    this.game.stage.on('click', (e) => {
-      this.handleStageClick(e);
-    });
+    // 为每个积木添加事件监听
+    this.game.blocks.forEach(block => {
+      const group = block.getGroup();
 
-    // 键盘事件
-    window.addEventListener('keydown', (e) => {
-      this.handleKeyDown(e);
+      // 移除旧的事件监听器
+      group.off('click');
+      group.off('dblclick');
+      group.off('contextmenu');
+      group.off('mousedown');
+
+      // 添加新的事件监听器
+      group.on('mousedown', (e) => {
+        this.handleBlockMouseDown(e, block);
+      });
+
+      group.on('contextmenu', (e) => {
+        e.evt.preventDefault(); // 阻止默认右键菜单
+      });
     });
   }
 
   /**
-   * 处理舞台点击
+   * 处理积木鼠标按下事件
    * @param {Object} e
-   */
-  handleStageClick(e) {
-    // 如果点击的不是积木，取消选择
-    if (e.target === this.game.stage ||
-        e.target.getParent() === this.game.grid.group ||
-        e.target.getParent() === this.game.blocksGroup) {
-      this.deselectAll();
-    }
-  }
-
-  /**
-   * 处理键盘按下
-   * @param {KeyboardEvent} e
-   */
-  handleKeyDown(e) {
-    if (!this.selectedBlock) return;
-
-    switch(e.key.toLowerCase()) {
-      case 'h':
-      case 'arrowleft':
-      case 'arrowright':
-        e.preventDefault();
-        this.selectedBlock.flip('horizontal');
-        break;
-      case 'v':
-      case 'arrowup':
-      case 'arrowdown':
-        e.preventDefault();
-        this.selectedBlock.flip('vertical');
-        break;
-      case 'r':
-        e.preventDefault();
-        this.selectedBlock.rotate(90); // 顺时针旋转90度
-        break;
-      case 'l':
-        e.preventDefault();
-        this.selectedBlock.rotate(-90); // 逆时针旋转90度
-        break;
-    }
-  }
-
-  /**
-   * 选择积木
    * @param {Block} block
    */
-  selectBlock(block) {
-    // 取消之前的选择
-    this.deselectAll();
+  handleBlockMouseDown(e, block) {
+    // 阻止事件冒泡和默认行为
+    e.evt.preventDefault();
 
-    // 选择新积木
-    this.selectedBlock = block;
-    block.select();
-    this.transformer.nodes([block.getGroup()]);
-    this.game.layer.draw();
+    const currentTime = Date.now();
+    const isRightClick = e.evt.button === 2;
+
+    if (isRightClick) {
+      // 右键处理
+      if (this.rightClickTimer) {
+        // 清除之前的定时器（这是双击）
+        clearTimeout(this.rightClickTimer);
+        this.rightClickTimer = null;
+        // 右键双击 - 顺时针旋转90度
+        block.rotate(90);
+      } else {
+        // 设置定时器判断是单击还是双击
+        this.rightClickTimer = setTimeout(() => {
+          // 右键单击 - 镜像翻转
+          block.flip('horizontal');
+          this.rightClickTimer = null;
+        }, this.rightClickDelay);
+      }
+    } else {
+      // 左键处理
+      if (this.lastClickedBlock === block &&
+          currentTime - this.lastClickTime < this.doubleClickDelay) {
+        // 左键双击 - 逆时针旋转90度
+        block.rotate(-90);
+        this.lastClickedBlock = null;
+        this.lastClickTime = 0;
+      } else {
+        // 记录单击事件
+        this.lastClickedBlock = block;
+        this.lastClickTime = currentTime;
+      }
+    }
   }
 
   /**
-   * 取消选择所有积木
+   * 重新绑定事件（用于积木重置后）
    */
-  deselectAll() {
-    this.game.blocks.forEach(block => {
-      block.deselect();
-    });
-
-    this.selectedBlock = null;
-    this.transformer.nodes([]);
-    this.game.layer.draw();
-  }
-
-  /**
-   * 获取当前选中的积木
-   * @returns {Block|null}
-   */
-  getSelectedBlock() {
-    return this.selectedBlock;
+  rebindEvents() {
+    this.addEventListeners();
   }
 
   /**
    * 销毁输入处理器
    */
   destroy() {
-    this.transformer.destroy();
-    window.removeEventListener('keydown', this.handleKeyDown);
-    this.game.stage.off('click', this.handleStageClick);
+    // 清理定时器
+    if (this.rightClickTimer) {
+      clearTimeout(this.rightClickTimer);
+      this.rightClickTimer = null;
+    }
+
+    // 移除所有事件监听器
+    this.game.blocks.forEach(block => {
+      const group = block.getGroup();
+      group.off('mousedown');
+      group.off('contextmenu');
+    });
   }
 }

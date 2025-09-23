@@ -102,11 +102,6 @@ export class Block {
    * 添加事件监听
    */
   addEventListeners() {
-    // 点击选中
-    this.group.on('click', () => {
-      this.select();
-    });
-
     // 拖拽开始
     this.group.on('dragstart', () => {
       this.group.physics.isDragging = true;
@@ -134,18 +129,17 @@ export class Block {
   }
 
   /**
-   * 选中积木
+   * 选中积木（已弃用）
    */
   select() {
-    this.group.physics.isSelected = true;
-    this.group.physics.velocityY = 0;
+    // 选择功能已移除，此方法保留以避免错误
   }
 
   /**
-   * 取消选中
+   * 取消选中（已弃用）
    */
   deselect() {
-    this.group.physics.isSelected = false;
+    // 选择功能已移除，此方法保留以避免错误
   }
 
   /**
@@ -173,11 +167,8 @@ export class Block {
     this.group.physics.velocityY = 0;
     this.group.physics.isGrounded = false;
     this.group.physics.isDragging = false;
-    this.group.physics.isSelected = false;
     this.group.physics.isFlippedX = false;
     this.group.physics.isFlippedY = false;
-
-    this.deselect();
   }
 
   /**
