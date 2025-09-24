@@ -3,6 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Static Open Graph / Twitter Card Meta Tags -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="智能方块密码 - Brain Box Password" />
+  <meta property="og:description" content="挑战你的智力极限！完成方块拼图，与全球玩家竞争最佳成绩。" />
+  <meta property="og:image" content="https://brainboxpassword.com/src/static/share.png" />
+  <meta property="og:url" content="https://brainboxpassword.com" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="智能方块密码 - Brain Box Password" />
+  <meta name="twitter:description" content="挑战你的智力极限！完成L形方块拼图，与全球玩家竞争最佳成绩。" />
+  <meta name="twitter:image" content="https://brainboxpassword.com/src/static/share.png" />
+
   <title data-i18n="pageTitle">智能方块密码游戏</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/konva@9/konva.min.js"></script>
@@ -224,8 +237,15 @@
 
   <!-- 成功提示模态框 -->
   <div id="success-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-    <div class="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
+    <div class="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onclick="hideSuccessModal()"></div>
     <div class="relative bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full transform transition-all duration-500 scale-95 opacity-0" id="success-content">
+      <!-- 关闭按钮 -->
+      <button onclick="hideSuccessModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
       <div class="text-center">
         <div class="w-20 h-20 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
           <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -261,7 +281,7 @@
           >
         </div>
 
-        <div class="flex gap-3">
+        <div class="flex gap-3 mb-6">
           <button id="submit-score-btn" class="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold py-3 px-4 rounded-xl transition-all transform hover:scale-105">
             <span class="flex items-center justify-center">
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -272,11 +292,19 @@
           </button>
           <button id="new-game-btn" class="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-all transform hover:scale-105">
             <span class="flex items-center justify-center">
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              <span data-i18n="newGame">新游戏</span>
+              <span class="text-2xl mr-2">↺</span>
+              <span data-i18n="newGame">再试一次</span>
             </span>
+          </button>
+        </div>
+
+        <!-- 分享按钮 -->
+        <div>
+          <button id="share-btn" class="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-black to-gray-800 text-white font-medium rounded-lg hover:from-gray-800 hover:to-gray-900 transition-all transform hover:scale-105">
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+            <span data-i18n="shareToX">分享到 X</span>
           </button>
         </div>
       </div>
@@ -325,10 +353,13 @@
         enterName: '输入你的名字',
         namePlaceholder: '请输入名字',
         submitScore: '提交记录',
-        newGame: '新游戏',
+        newGame: '再试一次',
         resume: '继续游戏',
         close: '关闭',
-        loading: '加载中...'
+        loading: '加载中...',
+        shareToX: '分享到 X',
+        shareText: '我刚刚完成了智能方块密码游戏！用时 {time}。你能超越我的成绩吗？',
+        shareHashtags: '智能方块密码 脑力挑战'
       },
       en: {
         pageTitle: 'Brain Box Password Game',
@@ -367,10 +398,13 @@
         enterName: 'Enter your name',
         namePlaceholder: 'Enter your name',
         submitScore: 'Submit Score',
-        newGame: 'New Game',
+        newGame: 'Try Again',
         resume: 'Resume',
         close: 'Close',
-        loading: 'Loading...'
+        loading: 'Loading...',
+        shareToX: 'Share to X',
+        shareText: 'I just completed Brain Box Password game! Time: {time}. Can you beat my score?',
+        shareHashtags: 'BrainBoxPassword PuzzleChallenge'
       }
     };
 
@@ -496,6 +530,11 @@
       return `${mins}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
     }
 
+    function formatTimeInSeconds(totalMs) {
+      const totalSeconds = (totalMs / 1000).toFixed(1);
+      return `${totalSeconds}s`;
+    }
+
     function formatDate(dateStr) {
       const date = new Date(dateStr);
       return `${date.getMonth() + 1}/${date.getDate()}`;
@@ -566,6 +605,18 @@
 
     window.hideLeaderboard = function() {
       document.getElementById('leaderboard-modal').classList.add('hidden');
+    }
+
+    window.hideSuccessModal = function() {
+      const modal = document.getElementById('success-modal');
+      const content = document.getElementById('success-content');
+
+      content.classList.remove('scale-100', 'opacity-100');
+      content.classList.add('scale-95', 'opacity-0');
+
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 300);
     }
 
     // 计时器
@@ -818,7 +869,111 @@
       };
 
       console.log('游戏已初始化');
+
+      // 分享功能
+      document.getElementById('share-btn').addEventListener('click', shareToX);
     });
-  </script>
+
+    // 分享到X功能
+    async function shareToX() {
+      try {
+        const shareBtn = document.getElementById('share-btn');
+        const originalText = shareBtn.innerHTML;
+
+        // 显示加载状态
+        shareBtn.innerHTML = `
+          <svg class="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          准备分享...
+        `;
+        shareBtn.disabled = true;
+
+        const completionTimeFormatted = document.getElementById('completion-time').textContent;
+        const playerName = document.getElementById('player-name').value || 'Anonymous';
+
+        // 获取实际的时间毫秒数并转换为秒格式
+        const timeInMs = currentScore ? currentScore.time : 0;
+        const timeInSeconds = formatTimeInSeconds(timeInMs);
+
+        // 分享使用静态 meta 标签信息
+        console.log('使用静态 meta 标签分享');
+
+        // 构建分享文本（支持国际化）
+        const shareText = i18n[currentLang].shareText
+          .replace('{time}', timeInSeconds)
+          .replace('#' + i18n[currentLang].shareHashtags, '') + '#' + i18n[currentLang].shareHashtags;
+        const shareUrl = window.location.href;
+
+        // 构建X分享链接
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+
+        // 同时提供备用方案：复制链接到剪贴板
+        if (navigator.clipboard) {
+          await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+          console.log('分享链接已复制到剪贴板');
+        }
+
+        // 恢复按钮状态并显示成功提示
+        shareBtn.innerHTML = `
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+          <span data-i18n="shareToX">分享到 X</span>
+        `;
+        shareBtn.disabled = false;
+
+        // 显示提示信息
+        showShareSuccess();
+
+        // 立即打开X分享页面
+        window.open(twitterUrl, '_blank');
+
+      } catch (error) {
+        console.error('分享失败:', error);
+        alert('分享失败，请稍后重试');
+
+        // 恢复按钮状态
+        const shareBtn = document.getElementById('share-btn');
+        shareBtn.innerHTML = `
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+          <span data-i18n="shareToX">分享到 X</span>
+        `;
+        shareBtn.disabled = false;
+      }
+    }
+
+    // 显示分享成功提示
+    function showShareSuccess() {
+      const toast = document.createElement('div');
+      toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform';
+      toast.innerHTML = `
+        <div class="flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+  即将跳转到X分享
+        </div>
+      `;
+      document.body.appendChild(toast);
+
+      // 显示提示
+      setTimeout(() => {
+        toast.classList.remove('translate-x-full');
+      }, 100);
+
+      // 3秒后隐藏
+      setTimeout(() => {
+        toast.classList.add('translate-x-full');
+        setTimeout(() => {
+          document.body.removeChild(toast);
+        }, 300);
+      }, 3000);
+    }
+
+    </script>
 </body>
 </html>
