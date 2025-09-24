@@ -109,47 +109,72 @@
           </div>
 
           <!-- 操作说明 -->
-          <div class="bg-white rounded-2xl shadow-xl p-6">
-            <h3 class="text-lg font-semibold text-slate-800 mb-4" data-i18n="controls">操作说明</h3>
-            <div class="space-y-3 text-sm">
-              <div class="flex items-start">
-                <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                  <span class="text-xs font-bold text-blue-600">1</span>
-                </div>
-                <div>
-                  <p class="text-slate-700" data-i18n="selectBlock">点击选择积木</p>
-                </div>
-              </div>
-              <div class="flex items-start">
-                <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                  <span class="text-xs font-bold text-blue-600">2</span>
-                </div>
-                <div>
-                  <p class="text-slate-700" data-i18n="mouseControls">鼠标操作</p>
-                  <p class="text-xs text-slate-500 mt-1">
-                    <span class="inline-flex items-center px-2 py-1 bg-slate-100 rounded mr-1">双击左键</span>
-                    <span data-i18n="counterclockwise">逆时针</span>
-                    <span class="inline-flex items-center px-2 py-1 bg-slate-100 rounded mx-1">双击右键</span>
-                    <span data-i18n="clockwise">顺时针</span>
-                    <span class="inline-flex items-center px-2 py-1 bg-slate-100 rounded mx-1">单击右键</span>
-                    <span data-i18n="flip">翻转</span>
-                  </p>
+          <div class="bg-white rounded-2xl shadow-xl p-5">
+            <h3 class="text-base font-semibold text-slate-800 mb-3" data-i18n="controls">操作说明</h3>
+            <div class="space-y-3 text-xs">
+              <!-- 选择积木 -->
+              <div class="bg-slate-50 rounded p-3">
+                <div class="flex items-center mb-2">
+                  <div class="w-6 h-6 bg-slate-600 text-white rounded-full flex items-center justify-center mr-2 flex-shrink-0">
+                    <span class="text-xs font-bold">1</span>
+                  </div>
+                  <p class="text-slate-700 text-xs font-medium" data-i18n="selectBlock">点击选择积木</p>
                 </div>
               </div>
-              <div class="flex items-start">
-                <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                  <span class="text-xs font-bold text-blue-600">3</span>
+
+              <!-- 鼠标操作 -->
+              <div class="bg-slate-50 rounded p-3">
+                <div class="flex items-center mb-2">
+                  <div class="w-6 h-6 bg-slate-600 text-white rounded-full flex items-center justify-center mr-2 flex-shrink-0">
+                    <span class="text-xs font-bold">2</span>
+                  </div>
+                  <p class="text-slate-700 text-xs font-medium" data-i18n="mouseControls">鼠标操作</p>
                 </div>
-                <div>
-                  <p class="text-slate-700" data-i18n="keyboardControls">键盘操作</p>
-                  <p class="text-xs text-slate-500 mt-1">
-                    <span class="inline-flex items-center px-2 py-1 bg-slate-100 rounded mr-1">←</span>
-                    <span data-i18n="counterclockwise">逆时针</span>
-                    <span class="inline-flex items-center px-2 py-1 bg-slate-100 rounded mx-1">→</span>
-                    <span data-i18n="clockwise">顺时针</span>
-                    <span class="inline-flex items-center px-2 py-1 bg-slate-100 rounded mx-1">↑↓</span>
-                    <span data-i18n="flip">翻转</span>
-                  </p>
+                <div class="space-y-1 pl-8">
+                  <div class="flex items-center justify-between">
+                    <span class="inline-flex items-center px-2 py-1 bg-slate-100 rounded text-xs font-mono">
+                      <img src="src/static/mouse-left.svg" alt="left mouse" class="w-4 h-4 mr-1">
+                      <span>×2</span>
+                    </span>
+                    <span class="text-slate-600">↺</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="inline-flex items-center px-2 py-1 bg-slate-100 rounded text-xs font-mono">
+                      <img src="src/static/mouse-right.svg" alt="right mouse" class="w-4 h-4 mr-1">
+                      <span>×2</span>
+                    </span>
+                    <span class="text-slate-600">↻</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="inline-flex items-center px-2 py-1 bg-slate-100 rounded text-xs font-mono">
+                      <img src="src/static/mouse-right.svg" alt="right mouse" class="w-4 h-4 mr-1">
+                    </span>
+                    <span class="text-slate-600">↔️</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 键盘操作 -->
+              <div class="bg-slate-50 rounded p-3">
+                <div class="flex items-center mb-2">
+                  <div class="w-6 h-6 bg-slate-600 text-white rounded-full flex items-center justify-center mr-2 flex-shrink-0">
+                    <span class="text-xs font-bold">3</span>
+                  </div>
+                  <p class="text-slate-700 text-xs font-medium" data-i18n="keyboardControls">键盘操作</p>
+                </div>
+                <div class="space-y-1 pl-8">
+                  <div class="flex items-center justify-between">
+                    <span class="inline-flex items-center px-2 py-1 bg-slate-100 rounded text-xs font-mono">←</span>
+                    <span class="text-slate-600">↺</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="inline-flex items-center px-2 py-1 bg-slate-100 rounded text-xs font-mono">→</span>
+                    <span class="text-slate-600">↻</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="inline-flex items-center px-2 py-1 bg-slate-100 rounded text-xs font-mono">↑↓</span>
+                    <span class="text-slate-600">↔️</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -277,6 +302,12 @@
         selectBlock: '单击选择积木',
         mouseControls: '鼠标操作',
         keyboardControls: '键盘操作',
+        doubleClickLeft: '双击左键',
+        doubleClickRight: '双击右键',
+        singleClickRight: '单击右键',
+        arrowLeft: '←',
+        arrowRight: '→',
+        arrowUpDown: '↑↓',
         clockwise: '顺时针',
         counterclockwise: '逆时针',
         flip: '翻转',
@@ -313,6 +344,12 @@
         selectBlock: 'Click to select block',
         mouseControls: 'Mouse Controls',
         keyboardControls: 'Keyboard Controls',
+        doubleClickLeft: 'Double Click Left',
+        doubleClickRight: 'Double Click Right',
+        singleClickRight: 'Single Click Right',
+        arrowLeft: '←',
+        arrowRight: '→',
+        arrowUpDown: '↑↓',
         clockwise: 'Clockwise',
         counterclockwise: 'Counterclockwise',
         flip: 'Flip',
