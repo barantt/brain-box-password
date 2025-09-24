@@ -643,6 +643,10 @@
       }
     }
 
+  // 全局变量，用于分享功能访问
+    let currentScore = null;
+    let isCompleted = false;
+
     // 等待 DOM 加载完成
     document.addEventListener('DOMContentLoaded', () => {
       // 创建游戏实例
@@ -672,14 +676,12 @@
       const newGameBtn = document.getElementById('new-game-btn');
 
       let isPaused = false;
-      let isCompleted = false;
-      let currentScore = null;
 
       // 重置按钮
       resetBtn.addEventListener('click', () => {
         game.reset();
-        isCompleted = false;
-        currentScore = null;
+        window.isCompleted = false;
+        window.currentScore = null;
         startTime = Date.now();
         if (!isPaused) {
           stopTimer();
@@ -732,8 +734,8 @@
 
       // 游戏完成事件
       document.addEventListener('gameCompleted', async () => {
-        if (!isCompleted) {
-          isCompleted = true;
+        if (!window.isCompleted) {
+          window.isCompleted = true;
           stopTimer();
           const totalTime = Date.now() - startTime;
 
@@ -758,7 +760,7 @@
           }
 
           // 保存当前分数（毫秒精度）
-          currentScore = { time: totalTime, date: new Date().toISOString() };
+          window.currentScore = { time: totalTime, date: new Date().toISOString() };
 
           // 显示成功模态框
           const modal = document.getElementById('success-modal');
@@ -777,7 +779,7 @@
       // 提交分数
       submitScoreBtn.addEventListener('click', async () => {
         const playerName = playerNameInput.value.trim();
-        if (!currentScore) return;
+        if (!window.currentScore) return;
 
         // 禁用按钮防止重复提交
         submitScoreBtn.disabled = true;
@@ -791,7 +793,7 @@
 
         try {
           // 保存分数
-          const scores = await saveScore(playerName, currentScore.time);
+          const scores = await saveScore(playerName, window.currentScore.time);
 
           // 更新显示
           await updateTopScores();
@@ -836,12 +838,12 @@
         }
       });
 
-      // 新游戏按钮
+  // 新游戏按钮
       newGameBtn.addEventListener('click', () => {
         hideSuccessModal();
         game.reset();
-        isCompleted = false;
-        currentScore = null;
+        window.isCompleted = false;
+        window.currentScore = null;
         playerNameInput.value = '';
         playerNameInput.disabled = false;
         playerNameInput.classList.remove('bg-slate-50');
@@ -894,7 +896,7 @@
         const playerName = document.getElementById('player-name').value || 'Anonymous';
 
         // 获取实际的时间毫秒数并转换为秒格式
-        const timeInMs = currentScore ? currentScore.time : 0;
+        const timeInMs = window.currentScore ? window.currentScore.time : 0;
         const timeInSeconds = formatTimeInSeconds(timeInMs);
 
         // 分享使用静态 meta 标签信息
